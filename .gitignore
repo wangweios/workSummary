@@ -1,0 +1,11 @@
+.env
+.env*.local
+.next
+node_modules
+*.tsbuildinfo
+data/*.sqlite
+data/*.sqlite-*
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
