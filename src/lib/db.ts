@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { bossTagLabels } from "@/lib/role-presets";
-import type { BossPersona, ReportRecord, ReportScore, RoleProfile } from "@/lib/types";
+import type { BossPersona, ProviderInfo, ReportRecord, ReportScore, RoleProfile } from "@/lib/types";
 import { createId, nowIso, parseJson } from "@/lib/utils";
 
 type Row = Record<string, unknown>;
@@ -455,6 +455,74 @@ export function listReportsForAggregation(options: { from?: string; to?: string;
     .all(...params) as Row[];
 
   return rows.map((row) => mapReport(row, listScoresForReport(rowString(row, "id"))));
+}
+
+export function getStorageHealth(providers: ProviderInfo[]) {
+  const db = getDb();
+  const reportCount = (db.prepare("SELECT COUNT(*) AS count FROM reports").get() as Row | undefined)?.count ?? 0;
+  const roleCount = (db.prepare("SELECT COUNT(*) AS count FROM role_profiles").get() as Row | undefined)?.count ?? 0;
+  const bossCount = (db.prepare("SELECT COUNT(*) AS count FROM boss_personas").get() as Row | undefined)?.count ?? 0;
+
+  return {
+    ok: true,
+    database: {
+      path: dbPath,
+      reportCount: Number(reportCount),
+      roleCount: Number(roleCount),
+      bossCount: Number(bossCount)
+    },
+    providers: providers.map((provider) => ({
+      id: provider.id,
+      name: provider.name,
+      configured: provider.configured,
+      apiKeyEnv: provider.apiKeyEnv,
+      defaultModel: provider.defaultModel
+    })),
+    checkedAt: nowIso()
+  };
+}
+
+export function exportWorkspaceData() {
+  return sanitizeExport({
+    exportedAt: nowIso(),
+    roleProfiles: listRoleProfiles(),
+    bossPersonas: listBossPersonas(),
+    reports: listReports({ limit: 100 }),
+    schemaVersion: 1
+  });
+}
+
+function sanitizeExport<T>(value: T): T {
+  if (typeof value === "string") {
+    return value
+      .replace(/[A-Z0-9_]*API_KEY/g, "API Key")
+      .replace(/Bearer\s+[A-Za-z0-9._~+\/=:-]+/g, "Bearer [redacted]") as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeExport(item)) as T;
+  }
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, item]) => [key, sanitizeExport(item)])
+    ) as T;
+  }
+  return value;
+}
+
+export function clearWorkspaceData() {
+  const db = getDb();
+  db.exec(`
+    DELETE FROM report_scores;
+    DELETE FROM reports;
+    DELETE FROM role_profiles;
+    DELETE FROM boss_personas;
+  `);
+  seedBossPersonas(db);
+  return {
+    ok: true,
+    clearedAt: nowIso(),
+    bossPersonas: listBossPersonas()
+  };
 }
 
 function listScoresForReport(reportId: string): ReportScore[] {

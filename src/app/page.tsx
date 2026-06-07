@@ -10,11 +10,14 @@ import {
   Clipboard,
   Copy,
   Database,
+  Download,
   Gauge,
   RefreshCcw,
   Save,
   Settings2,
+  ShieldCheck,
   Sparkles,
+  Trash2,
   UserRoundCog
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -310,6 +313,44 @@ export default function HomePage() {
     setNotice("已复制到剪贴板。");
   }
 
+  async function exportData() {
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/export");
+      if (!response.ok) throw new Error("导出失败。");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `work-summary-export-${today()}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      setNotice("本地数据已导出。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "导出失败。");
+    }
+  }
+
+  async function resetData() {
+    const confirmed = window.confirm("这会清空本机保存的身份、老板人设、报告和评分，并恢复默认老板人设。确定继续吗？");
+    if (!confirmed) return;
+    setError("");
+    setNotice("");
+    try {
+      const response = await fetch("/api/settings/reset", { method: "DELETE" });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "清空失败。");
+      setBosses(data.bossPersonas || []);
+      setSelectedBossId(data.bossPersonas?.[0]?.id || "");
+      setHistory([]);
+      setCurrentReport(null);
+      setNotice("本地数据已清空，并恢复默认老板人设。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "清空失败。");
+    }
+  }
+
   function labeledFields(): Record<string, string> {
     if (!selectedPreset) return fields;
     return Object.fromEntries(selectedPreset.fields.map((field) => [field.label, fields[field.id] || ""]));
@@ -358,6 +399,16 @@ export default function HomePage() {
               <option key={item} value={item} />
             ))}
           </datalist>
+          <div className={selectedProvider?.configured ? "provider-status ready" : "provider-status warn"}>
+            <ShieldCheck size={16} aria-hidden />
+            <span>
+              {selectedProvider?.configured
+                ? "AI Key 已配置"
+                : selectedProvider
+                  ? `未配置 ${selectedProvider.apiKeyEnv}，可先生成本地体验稿`
+                  : "正在读取 AI 配置"}
+            </span>
+          </div>
         </div>
       </section>
 
@@ -618,9 +669,19 @@ export default function HomePage() {
         </section>
 
         <section className="panel history-panel">
-          <div className="panel-title">
-            <Database size={18} aria-hidden />
-            <h2>历史</h2>
+          <div className="panel-title split">
+            <span>
+              <Database size={18} aria-hidden />
+              <h2>历史</h2>
+            </span>
+            <div className="icon-actions">
+              <button type="button" aria-label="导出本地数据" title="导出本地数据" onClick={exportData}>
+                <Download size={17} aria-hidden />
+              </button>
+              <button type="button" aria-label="清空本地数据" title="清空本地数据" onClick={resetData}>
+                <Trash2 size={17} aria-hidden />
+              </button>
+            </div>
           </div>
           <div className="history-list">
             {history.length ? (

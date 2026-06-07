@@ -92,6 +92,31 @@ h1 {
   justify-content: flex-end;
 }
 
+.provider-status {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 13px;
+  line-height: 1.25;
+  border: 1px solid;
+  max-width: 310px;
+}
+
+.provider-status.ready {
+  color: #1e5d41;
+  border-color: #b9dcc7;
+  background: #effaf3;
+}
+
+.provider-status.warn {
+  color: #79500f;
+  border-color: #ead5ad;
+  background: #fff9eb;
+}
+
 label {
   display: grid;
   gap: 7px;

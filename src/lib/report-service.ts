@@ -1,9 +1,9 @@
 import { addReportScore, createReport, getBossPersona, getReport, listReportsForAggregation, updateReportOptimizedContent } from "@/lib/db";
-import { getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
+import { bossTagLabels, getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
 import type { BossPersona, ReportRecord, ReportScore, ScoreDimension, ScoreDimensionId, WorkInput } from "@/lib/types";
 import { callChatCompletion } from "@/lib/ai/providers";
 import { buildOptimizePrompt, buildReportPrompt, buildScorePrompt } from "@/lib/ai/prompts";
-import { clampScore, requireText } from "@/lib/utils";
+import { clampScore, reportTypeLabel, requireText } from "@/lib/utils";
 
 const dimensionIds = Object.keys(scoreDimensionLabels) as ScoreDimensionId[];
 
@@ -29,18 +29,31 @@ export async function generateReport(input: {
           excludeType: input.workInput.reportType
         });
 
-  const content = await callChatCompletion({
-    providerId: input.provider,
-    model: input.model,
-    temperature: 0.32,
-    messages: buildReportPrompt({
+  let content: string;
+  try {
+    content = await callChatCompletion({
+      providerId: input.provider,
+      model: input.model,
+      temperature: 0.32,
+      messages: buildReportPrompt({
+        workInput: input.workInput,
+        roleProfile: input.roleProfile,
+        bossPersona,
+        rolePresetId: input.rolePresetId,
+        historyReports
+      })
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (!message.includes("缺少")) throw error;
+    content = buildLocalExperienceReport({
       workInput: input.workInput,
       roleProfile: input.roleProfile,
       bossPersona,
       rolePresetId: input.rolePresetId,
       historyReports
-    })
-  });
+    });
+  }
 
   const report = createReport({
     type: input.workInput.reportType,
@@ -272,4 +285,88 @@ function validateWorkInput(workInput: WorkInput) {
   const text = Object.values(workInput.fields || {}).join("").trim() + (workInput.extraText || "").trim();
   if (!text) throw new Error("请先填写本周期工作内容。");
   if (!workInput.reportType) throw new Error("请选择报告类型。");
+}
+
+function buildLocalExperienceReport(input: {
+  workInput: WorkInput;
+  roleProfile: ReportRecord["roleProfile"];
+  bossPersona: BossPersona;
+  rolePresetId: string;
+  historyReports: ReportRecord[];
+}) {
+  const preset = getRolePreset(input.rolePresetId);
+  const entries = Object.entries(input.workInput.fields || {}).filter(([, value]) => value?.trim());
+  const extra = input.workInput.extraText.trim();
+  const dataEntries = entries.filter(([label]) => /指标|数据|金额|成交|用例|缺陷|性能|稳定|线索|收入|回款/.test(label));
+  const riskEntries = entries.filter(([label]) => /风险|问题|阻塞|依赖|故障|回款|上线建议/.test(label));
+  const nextEntries = entries.filter(([label]) => /下一步|下周|计划|推进|决策|支持|依赖/.test(label));
+  const achievementEntries = entries.filter(([label]) => !/风险|问题|阻塞|依赖|下一步|下周|计划|推进|决策|支持|禁忌/.test(label));
+  const historyLines = input.historyReports
+    .slice(0, 6)
+    .map((report) => `- ${reportTypeLabel(report.type)} ${report.periodStart} 至 ${report.periodEnd}：${(report.optimizedContent || report.content).split("\n").find(Boolean) || "已保存历史记录"}`);
+
+  const highTags = Object.entries(input.bossPersona.tags)
+    .filter(([, value]) => value >= 70)
+    .map(([key]) => bossTagLabels[key as keyof typeof bossTagLabels])
+    .join("、") || "结果、风险、下一步";
+
+  const sections = [
+    {
+      title: "关键成果/进展",
+      body: formatLocalItems(achievementEntries, extra, "本周期已完成的关键进展已整理，建议继续补充可验证结果。")
+    },
+    {
+      title: "数据与事实",
+      body: dataEntries.length ? formatLocalItems(dataEntries) : "- 暂无量化数据，建议补充数量、比例、金额、耗时、缺陷数或完成率。"
+    },
+    {
+      title: "风险/问题",
+      body: riskEntries.length ? formatLocalItems(riskEntries) : "- 暂无明确风险；如存在延期、依赖、质量或客户风险，建议补充影响范围和预案。"
+    },
+    {
+      title: "下一步计划",
+      body: nextEntries.length ? formatLocalItems(nextEntries) : "- 建议补充下一步动作、时间点、责任人和需要协调的资源。"
+    },
+    {
+      title: "需要领导支持",
+      body: /决策|支持|协调|确认|资源|审批/.test(entries.map((item) => item.join(" ")).join("\n") + extra)
+        ? "- 请领导关注上述决策、协调或资源支持事项。"
+        : "- 暂无需领导额外协调。"
+    }
+  ];
+
+  const riskFirst = input.bossPersona.tags.risk >= 75;
+  const dataFirst = input.bossPersona.tags.data >= 75;
+  const orderedSections = [...sections].sort((a, b) => {
+    if (riskFirst && a.title.includes("风险")) return -1;
+    if (riskFirst && b.title.includes("风险")) return 1;
+    if (dataFirst && a.title.includes("数据")) return -1;
+    if (dataFirst && b.title.includes("数据")) return 1;
+    return 0;
+  });
+
+  return [
+    `# ${preset.name}${reportTypeLabel(input.workInput.reportType)}（本地体验稿）`,
+    "",
+    `核心结论：本周期围绕${input.roleProfile.projectContext || preset.summary}推进，当前汇报重点应匹配领导关注的${highTags}；以下内容基于已填写事实整理，未补充的数据均按“暂无量化数据”处理。`,
+    "",
+    `周期：${input.workInput.periodStart || "未填写"} 至 ${input.workInput.periodEnd || "未填写"}`,
+    "",
+    ...orderedSections.flatMap((section) => [`## ${section.title}`, section.body, ""]),
+    input.historyReports.length ? `## 历史沉淀\n${historyLines.join("\n")}\n` : "",
+    "## 建议补充",
+    "- 补充可量化结果，避免报告看起来像过程流水账。",
+    "- 补充风险影响范围和明确预案，便于领导判断是否介入。",
+    "- 补充下一步的时间点和验收口径，方便后续周报/月报自动汇总。"
+  ].filter(Boolean).join("\n");
+}
+
+function formatLocalItems(entries: Array<[string, string]>, extra = "", fallback = "暂无明确内容。") {
+  const lines = entries
+    .filter(([, value]) => value.trim())
+    .map(([label, value]) => `- ${label}：${value.trim()}`);
+  if (extra && lines.length < 4) {
+    lines.push(`- 补充材料：${extra.length > 240 ? `${extra.slice(0, 240)}...` : extra}`);
+  }
+  return lines.length ? lines.join("\n") : `- ${fallback}`;
 }
