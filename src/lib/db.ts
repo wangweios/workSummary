@@ -2,13 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import { bossTagLabels } from "@/lib/role-presets";
-import type { BossPersona, ProviderInfo, ReportRecord, ReportScore, RoleProfile } from "@/lib/types";
+import type { BossPersona, ProviderInfo, ReportRecord, ReportScore, RoleProfile, UserFeedback, UserFeedbackInput } from "@/lib/types";
 import { createId, nowIso, parseJson } from "@/lib/utils";
 
 type Row = Record<string, unknown>;
 
-const dataDir = path.join(process.cwd(), "data");
-const dbPath = path.join(dataDir, "work-summary.sqlite");
+const configuredDbPath = process.env.WORK_SUMMARY_DB_PATH;
+const dbPath = configuredDbPath
+  ? path.resolve(configuredDbPath)
+  : path.join(process.cwd(), "data", "work-summary.sqlite");
+const dataDir = path.dirname(dbPath);
 
 declare global {
   // eslint-disable-next-line no-var
@@ -97,6 +100,18 @@ function initializeDb(db: DatabaseSync) {
       summary TEXT NOT NULL,
       created_at TEXT NOT NULL,
       FOREIGN KEY(report_id) REFERENCES reports(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS user_feedback (
+      id TEXT PRIMARY KEY,
+      rating INTEGER NOT NULL,
+      role_preset_id TEXT NOT NULL,
+      report_type TEXT NOT NULL,
+      pain_point TEXT NOT NULL,
+      useful_parts TEXT NOT NULL,
+      missing_parts TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      created_at TEXT NOT NULL
     );
   `);
 
@@ -462,6 +477,7 @@ export function getStorageHealth(providers: ProviderInfo[]) {
   const reportCount = (db.prepare("SELECT COUNT(*) AS count FROM reports").get() as Row | undefined)?.count ?? 0;
   const roleCount = (db.prepare("SELECT COUNT(*) AS count FROM role_profiles").get() as Row | undefined)?.count ?? 0;
   const bossCount = (db.prepare("SELECT COUNT(*) AS count FROM boss_personas").get() as Row | undefined)?.count ?? 0;
+  const feedbackCount = (db.prepare("SELECT COUNT(*) AS count FROM user_feedback").get() as Row | undefined)?.count ?? 0;
 
   return {
     ok: true,
@@ -469,7 +485,8 @@ export function getStorageHealth(providers: ProviderInfo[]) {
       path: dbPath,
       reportCount: Number(reportCount),
       roleCount: Number(roleCount),
-      bossCount: Number(bossCount)
+      bossCount: Number(bossCount),
+      feedbackCount: Number(feedbackCount)
     },
     providers: providers.map((provider) => ({
       id: provider.id,
@@ -488,6 +505,7 @@ export function exportWorkspaceData() {
     roleProfiles: listRoleProfiles(),
     bossPersonas: listBossPersonas(),
     reports: listReports({ limit: 100 }),
+    feedback: listFeedback({ limit: 100 }),
     schemaVersion: 1
   });
 }
@@ -516,12 +534,68 @@ export function clearWorkspaceData() {
     DELETE FROM reports;
     DELETE FROM role_profiles;
     DELETE FROM boss_personas;
+    DELETE FROM user_feedback;
   `);
   seedBossPersonas(db);
   return {
     ok: true,
     clearedAt: nowIso(),
     bossPersonas: listBossPersonas()
+  };
+}
+
+export function createFeedback(input: UserFeedbackInput): UserFeedback {
+  const rating = Math.max(1, Math.min(5, Math.round(Number(input.rating || 3))));
+  const feedback: UserFeedback = {
+    id: createId("feedback"),
+    rating,
+    rolePresetId: String(input.rolePresetId || "unknown"),
+    reportType: String(input.reportType || "unknown"),
+    painPoint: String(input.painPoint || "").trim(),
+    usefulParts: String(input.usefulParts || "").trim(),
+    missingParts: String(input.missingParts || "").trim(),
+    contact: String(input.contact || "").trim(),
+    createdAt: nowIso()
+  };
+
+  getDb().prepare(`
+    INSERT INTO user_feedback
+      (id, rating, role_preset_id, report_type, pain_point, useful_parts, missing_parts, contact, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    feedback.id,
+    feedback.rating,
+    feedback.rolePresetId,
+    feedback.reportType,
+    feedback.painPoint,
+    feedback.usefulParts,
+    feedback.missingParts,
+    feedback.contact,
+    feedback.createdAt
+  );
+
+  return feedback;
+}
+
+export function listFeedback(options: { limit?: number } = {}): UserFeedback[] {
+  const limit = Math.min(Math.max(Number(options.limit ?? 50), 1), 200);
+  const rows = getDb()
+    .prepare("SELECT * FROM user_feedback ORDER BY created_at DESC LIMIT ?")
+    .all(limit) as Row[];
+  return rows.map(mapFeedback);
+}
+
+function mapFeedback(row: Row): UserFeedback {
+  return {
+    id: rowString(row, "id"),
+    rating: rowNumber(row, "rating"),
+    rolePresetId: rowString(row, "role_preset_id"),
+    reportType: rowString(row, "report_type"),
+    painPoint: rowString(row, "pain_point"),
+    usefulParts: rowString(row, "useful_parts"),
+    missingParts: rowString(row, "missing_parts"),
+    contact: rowString(row, "contact"),
+    createdAt: rowString(row, "created_at")
   };
 }
 

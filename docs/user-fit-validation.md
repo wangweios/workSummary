@@ -43,3 +43,17 @@
 3. 增加飞书/钉钉/邮件三种复制格式。
 4. 增加真实用户反馈入口和满意度记录。
 5. 增加 Playwright 端到端测试，覆盖生成、优化、导出、清空。
+
+## Feedback Loop Added
+
+The product now has a feedback API for trial users. Each record captures:
+
+- rating from 1 to 5
+- role preset
+- report type
+- original pain point
+- useful parts
+- missing parts
+- optional contact
+
+This turns user-fit validation into product data. In trial sessions, collect feedback immediately after the user generates and copies a report.

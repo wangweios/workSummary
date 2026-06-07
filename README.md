@@ -58,3 +58,36 @@ curl http://127.0.0.1:3000/api/health
 - 报告历史保存在 `data/work-summary.sqlite`。
 - 导出接口不会包含 API Key。
 - 清空本地数据后会恢复默认老板人设。
+
+## Automated Launch Verification
+
+Run the full local production smoke test before release:
+
+```bash
+pnpm build
+pnpm verify:launch
+```
+
+`verify:launch` starts `next start` on an isolated port with a temporary SQLite database, then verifies:
+
+- `/api/health` initializes storage and default boss personas.
+- `/api/reports/generate` can create a no-key local draft and score it.
+- `/api/feedback` saves a user-fit feedback record.
+- `/api/export` includes reports and feedback without credential-like text.
+- `/api/settings/reset` restores a clean local workspace.
+
+## Feedback API
+
+Save user-fit feedback after a trial session:
+
+```bash
+curl -X POST http://127.0.0.1:3000/api/feedback \
+  -H "content-type: application/json" \
+  -d '{"rating":4,"rolePresetId":"sales","reportType":"daily","painPoint":"writing weekly summaries takes too long","usefulParts":"pipeline and risk fields","missingParts":"CRM import"}'
+```
+
+Read recent feedback:
+
+```bash
+curl http://127.0.0.1:3000/api/feedback?limit=20
+```

@@ -114,6 +114,22 @@ export interface ReportRecord {
   updatedAt: string;
 }
 
+export interface UserFeedbackInput {
+  rating: number;
+  rolePresetId: string;
+  reportType: string;
+  painPoint: string;
+  usefulParts: string;
+  missingParts: string;
+  contact?: string;
+}
+
+export interface UserFeedback extends UserFeedbackInput {
+  id: string;
+  contact: string;
+  createdAt: string;
+}
+
 export interface ProviderInfo {
   id: string;
   name: string;

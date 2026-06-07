@@ -41,3 +41,11 @@
 3. 增加模板版本管理和行业模板。
 4. 增加飞书/钉钉复制格式优化。
 5. 增加真实用户访谈记录和反馈看板。
+
+## 2026-06-08 Update
+
+Added an automated launch verification command: `pnpm verify:launch`.
+
+The verification uses a temporary SQLite database through `WORK_SUMMARY_DB_PATH`, so release checks do not pollute real local user data. It covers health check, local no-key generation, scoring, feedback capture, export privacy, and reset.
+
+Added `/api/feedback` as the first product feedback loop. This gives the team a concrete place to capture whether the product is solving the user's actual reporting pain instead of only relying on assumptions.
