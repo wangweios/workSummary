@@ -79,6 +79,13 @@ async function main() {
 
     const bosses = await request("GET", "/api/bosses");
     const bossId = bosses.bosses[0].id;
+    const extracted = await request("POST", "/api/inputs/extract", {
+      rolePresetId: "sales",
+      text: "拜访/沟通：Visited two renewal customers.\n成交/金额：Estimated pipeline 120k.\n回款风险：Payment approval may slip by one week.\n下周推进：Send revised quote and escalate legal review."
+    });
+    if (!extracted.fields.visits?.value) throw new Error("Input extraction did not fill sales visit field");
+    if (!extracted.fields.revenue?.value) throw new Error("Input extraction did not fill sales revenue field");
+
     const generated = await request("POST", "/api/reports/generate", {
       rolePresetId: "sales",
       roleProfile: {

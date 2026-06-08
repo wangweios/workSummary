@@ -11,6 +11,7 @@
 - 本地 SQLite：身份、人设、报告、评分和优化稿只保存在本机。
 - 上线级数据控制：支持导出本地数据、清空本地数据、健康检查。
 - 无 Key 体验：未配置 API Key 时可生成本地体验稿，便于先验证工作流。
+- 粘贴拆解：把会议纪要、流水记录或客户沟通粘贴到补充区，可一键拆成当前岗位字段草稿。
 
 ## 本地启动
 
@@ -73,6 +74,7 @@ pnpm verify:product
 
 - `/api/health` initializes storage and default boss personas.
 - `/api/reports/generate` can create a no-key local draft and score it.
+- `/api/inputs/extract` can turn pasted work material into role-specific field drafts.
 - `/api/feedback` saves a user-fit feedback record.
 - `/api/export` includes reports and feedback without credential-like text.
 - `/api/settings/reset` restores a clean local workspace.
@@ -85,6 +87,7 @@ For custom test environments, set `WORK_SUMMARY_DB_PATH` to point the app at an 
 - 7 scoring dimensions and 8 boss persona tags remain wired.
 - Daily, weekly, and monthly guidance exists for every role.
 - Feedback storage, export privacy, and no-key local draft fallback remain present.
+- Paste-to-fields extraction remains wired into API and UI.
 - Product, launch, and user-fit docs still describe the promised capabilities.
 
 ## Feedback API

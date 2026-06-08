@@ -343,6 +343,28 @@ textarea:focus {
   align-items: center;
 }
 
+.field-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inline-tool {
+  border: 1px solid #cfe0d2;
+  border-radius: 8px;
+  background: #eff5f0;
+  color: var(--green-strong);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .input-grid em {
   font-style: normal;
   font-size: 11px;

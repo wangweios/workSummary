@@ -20,7 +20,8 @@ import {
   ShieldCheck,
   Sparkles,
   Trash2,
-  UserRoundCog
+  UserRoundCog,
+  WandSparkles
 } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { BossPersona, BossTagId, ProviderInfo, ReportRecord, ReportScore, ReportType, RolePreset } from "@/lib/types";
@@ -104,6 +105,7 @@ export default function HomePage() {
   const [currentReport, setCurrentReport] = useState<ReportRecord | null>(null);
   const [activeOutput, setActiveOutput] = useState<"draft" | "optimized">("draft");
   const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [savingPersona, setSavingPersona] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
@@ -248,6 +250,44 @@ export default function HomePage() {
       setError(caught instanceof Error ? caught.message : "生成失败。");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function extractFieldsFromPaste() {
+    setError("");
+    setNotice("");
+    if (!extraText.trim()) {
+      setError("请先在补充粘贴中放入会议纪要、流水记录或项目材料。");
+      return;
+    }
+    setExtracting(true);
+    try {
+      const response = await fetch("/api/inputs/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rolePresetId: selectedPresetId,
+          text: extraText
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "拆解材料失败。");
+      const extracted = data.fields || {};
+      setFields((current) => {
+        const next = { ...current };
+        for (const [fieldId, result] of Object.entries(extracted)) {
+          const value = typeof result === "object" && result ? String((result as { value?: unknown }).value || "") : "";
+          if (value && !next[fieldId]?.trim()) {
+            next[fieldId] = value;
+          }
+        }
+        return next;
+      });
+      setNotice(data.summary || "已拆解粘贴材料。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "拆解材料失败。");
+    } finally {
+      setExtracting(false);
     }
   }
 
@@ -663,7 +703,13 @@ export default function HomePage() {
             ))}
           </div>
           <label className="extra-field">
-            <span>补充粘贴</span>
+            <span className="field-title-row">
+              补充粘贴
+              <button type="button" className="inline-tool" onClick={extractFieldsFromPaste} disabled={extracting || !extraText.trim()}>
+                <WandSparkles size={15} aria-hidden />
+                {extracting ? "拆解中" : "拆解粘贴"}
+              </button>
+            </span>
             <textarea
               value={extraText}
               placeholder="会议纪要、项目进展、客户反馈、代码提交、缺陷记录等都可以粘贴在这里。"

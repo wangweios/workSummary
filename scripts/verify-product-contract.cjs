@@ -21,6 +21,7 @@ function includesAll(source, items, label) {
 const rolePresets = read("src/lib/role-presets.ts");
 const types = read("src/lib/types.ts");
 const db = read("src/lib/db.ts");
+const extractor = read("src/lib/input-extractor.ts");
 const reportService = read("src/lib/report-service.ts");
 const page = read("src/app/page.tsx");
 const packageJson = JSON.parse(read("package.json"));
@@ -76,6 +77,8 @@ for (const roleId of requiredRoles) {
 includesAll(types, ["UserFeedbackInput", "UserFeedback", "ReportType", "ScoreDimensionId"], "public product types");
 includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "listFeedback"], "feedback storage contract");
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
+includesAll(extractor, requiredRoles, "input extractor role coverage");
+includesAll(page, ["extractFieldsFromPaste", "/api/inputs/extract", "WandSparkles"], "input extraction UI contract");
 includesAll(db, ["sanitizeExport", "API_KEY", "Bearer [redacted]"], "export privacy contract");
 includesAll(reportService, ["本地体验稿", "暂无量化数据", "buildLocalExperienceReport"], "no-key and no-fabrication fallback");
 
@@ -101,6 +104,7 @@ console.log(JSON.stringify({
     "boss persona tags",
     "feedback storage",
     "feedback UI",
+    "input extraction",
     "export privacy",
     "no-key fallback",
     "launch docs"
