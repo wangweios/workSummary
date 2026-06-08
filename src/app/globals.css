@@ -194,9 +194,14 @@ textarea:focus {
 }
 
 .score-panel,
-.history-panel {
+.history-panel,
+.feedback-panel {
   display: grid;
   gap: 12px;
+}
+
+.feedback-panel {
+  grid-column: span 2;
 }
 
 .panel-title {
@@ -557,6 +562,14 @@ meter {
   color: var(--muted);
 }
 
+.feedback-panel textarea {
+  min-height: 72px;
+}
+
+.feedback-panel .secondary-action {
+  justify-self: start;
+}
+
 .toast {
   max-width: 1500px;
   margin: 0 auto 14px;
@@ -586,7 +599,8 @@ meter {
   }
 
   .input-panel,
-  .output-panel {
+  .output-panel,
+  .feedback-panel {
     grid-column: span 2;
   }
 }
@@ -613,7 +627,8 @@ meter {
 
   .provider-strip label,
   .input-panel,
-  .output-panel {
+  .output-panel,
+  .feedback-panel {
     grid-column: span 1;
   }
 

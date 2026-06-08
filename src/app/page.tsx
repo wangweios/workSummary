@@ -12,8 +12,10 @@ import {
   Database,
   Download,
   Gauge,
+  MessageSquareText,
   RefreshCcw,
   Save,
+  Send,
   Settings2,
   ShieldCheck,
   Sparkles,
@@ -32,6 +34,14 @@ type RoleDraft = {
   projectContext: string;
   metrics: string;
   tone: string;
+};
+
+type FeedbackDraft = {
+  rating: number;
+  painPoint: string;
+  usefulParts: string;
+  missingParts: string;
+  contact: string;
 };
 
 const reportTypes: Array<{ id: ReportType; label: string }> = [
@@ -97,6 +107,14 @@ export default function HomePage() {
   const [optimizing, setOptimizing] = useState(false);
   const [savingPersona, setSavingPersona] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [feedbackDraft, setFeedbackDraft] = useState<FeedbackDraft>({
+    rating: 4,
+    painPoint: "",
+    usefulParts: "",
+    missingParts: "",
+    contact: ""
+  });
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
 
@@ -348,6 +366,45 @@ export default function HomePage() {
       setNotice("本地数据已清空，并恢复默认老板人设。");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "清空失败。");
+    }
+  }
+
+  async function submitFeedback() {
+    setError("");
+    setNotice("");
+    if (!feedbackDraft.painPoint && !feedbackDraft.usefulParts && !feedbackDraft.missingParts) {
+      setError("请至少填写一个试用反馈点。");
+      return;
+    }
+    setSendingFeedback(true);
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rating: feedbackDraft.rating,
+          rolePresetId: selectedPresetId,
+          reportType,
+          painPoint: feedbackDraft.painPoint,
+          usefulParts: feedbackDraft.usefulParts,
+          missingParts: feedbackDraft.missingParts,
+          contact: feedbackDraft.contact
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "保存反馈失败。");
+      setFeedbackDraft({
+        rating: 4,
+        painPoint: "",
+        usefulParts: "",
+        missingParts: "",
+        contact: ""
+      });
+      setNotice("试用反馈已保存。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "保存反馈失败。");
+    } finally {
+      setSendingFeedback(false);
     }
   }
 
@@ -696,6 +753,66 @@ export default function HomePage() {
               <p className="muted">暂无历史报告</p>
             )}
           </div>
+        </section>
+
+        <section className="panel feedback-panel">
+          <div className="panel-title">
+            <MessageSquareText size={18} aria-hidden />
+            <h2>试用反馈</h2>
+          </div>
+          <p className="muted">告诉我们这次生成是否解决了你的汇报痛点，反馈会保存在本机并随数据导出。</p>
+          <label>
+            <span>整体评分</span>
+            <select
+              value={feedbackDraft.rating}
+              onChange={(event) => setFeedbackDraft({ ...feedbackDraft, rating: Number(event.target.value) })}
+            >
+              <option value={5}>5 - 很适合直接使用</option>
+              <option value={4}>4 - 基本可用</option>
+              <option value={3}>3 - 需要明显修改</option>
+              <option value={2}>2 - 不太符合场景</option>
+              <option value={1}>1 - 没有解决问题</option>
+            </select>
+          </label>
+          <label>
+            <span>原本最痛的点</span>
+            <textarea
+              value={feedbackDraft.painPoint}
+              placeholder="例如：周报总是像流水账，领导看不到结果和风险。"
+              onChange={(event) => setFeedbackDraft({ ...feedbackDraft, painPoint: event.target.value })}
+              rows={3}
+            />
+          </label>
+          <label>
+            <span>有用的部分</span>
+            <textarea
+              value={feedbackDraft.usefulParts}
+              placeholder="例如：风险和下一步写得更清楚，销售金额/回款字段有帮助。"
+              onChange={(event) => setFeedbackDraft({ ...feedbackDraft, usefulParts: event.target.value })}
+              rows={3}
+            />
+          </label>
+          <label>
+            <span>还缺什么</span>
+            <textarea
+              value={feedbackDraft.missingParts}
+              placeholder="例如：希望支持从飞书/Jira/CRM 自动导入，或者增加邮件格式。"
+              onChange={(event) => setFeedbackDraft({ ...feedbackDraft, missingParts: event.target.value })}
+              rows={3}
+            />
+          </label>
+          <label>
+            <span>联系方式（可选）</span>
+            <input
+              value={feedbackDraft.contact}
+              placeholder="用于后续访谈，可留空"
+              onChange={(event) => setFeedbackDraft({ ...feedbackDraft, contact: event.target.value })}
+            />
+          </label>
+          <button type="button" className="secondary-action" onClick={submitFeedback} disabled={sendingFeedback}>
+            <Send size={16} aria-hidden />
+            {sendingFeedback ? "保存中" : "提交反馈"}
+          </button>
         </section>
       </form>
     </main>
