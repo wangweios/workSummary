@@ -45,6 +45,8 @@ type FeedbackDraft = {
   contact: string;
 };
 
+type ReportOutputFormat = "markdown" | "im" | "email";
+
 const reportTypes: Array<{ id: ReportType; label: string }> = [
   { id: "daily", label: "日报" },
   { id: "weekly", label: "周报" },
@@ -104,6 +106,9 @@ export default function HomePage() {
   const [historyTo, setHistoryTo] = useState(today());
   const [currentReport, setCurrentReport] = useState<ReportRecord | null>(null);
   const [activeOutput, setActiveOutput] = useState<"draft" | "optimized">("draft");
+  const [outputFormat, setOutputFormat] = useState<ReportOutputFormat>("markdown");
+  const [formattedOutput, setFormattedOutput] = useState("");
+  const [formattingOutput, setFormattingOutput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
@@ -131,10 +136,51 @@ export default function HomePage() {
   );
 
   const latestScore = useMemo(() => currentReport?.scores.at(-1), [currentReport]);
+  const outputContent = useMemo(
+    () => (activeOutput === "optimized" ? currentReport?.optimizedContent : currentReport?.content),
+    [activeOutput, currentReport]
+  );
 
   useEffect(() => {
     void bootstrap();
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function formatOutput() {
+      if (!outputContent) {
+        setFormattedOutput("");
+        return;
+      }
+      if (outputFormat === "markdown") {
+        setFormattedOutput(outputContent);
+        return;
+      }
+      setFormattingOutput(true);
+      try {
+        const response = await fetch("/api/reports/format", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: outputContent,
+            format: outputFormat,
+            reportType: currentReport?.type
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "格式化报告失败。");
+        if (!cancelled) setFormattedOutput(data.content || outputContent);
+      } catch {
+        if (!cancelled) setFormattedOutput(outputContent);
+      } finally {
+        if (!cancelled) setFormattingOutput(false);
+      }
+    }
+    void formatOutput();
+    return () => {
+      cancelled = true;
+    };
+  }, [currentReport?.type, outputContent, outputFormat]);
 
   useEffect(() => {
     if (selectedProvider) {
@@ -365,7 +411,7 @@ export default function HomePage() {
   }
 
   async function copyOutput() {
-    const content = activeOutput === "optimized" ? currentReport?.optimizedContent : currentReport?.content;
+    const content = formattedOutput || outputContent;
     if (!content) return;
     await navigator.clipboard.writeText(content);
     setNotice("已复制到剪贴板。");
@@ -463,8 +509,6 @@ export default function HomePage() {
         : current
     );
   }
-
-  const outputContent = activeOutput === "optimized" ? currentReport?.optimizedContent : currentReport?.content;
 
   return (
     <main className="app-shell">
@@ -752,8 +796,19 @@ export default function HomePage() {
               优化稿
             </button>
           </div>
+          <div className="format-row">
+            <label>
+              <span>复制格式</span>
+              <select value={outputFormat} onChange={(event) => setOutputFormat(event.target.value as ReportOutputFormat)}>
+                <option value="markdown">Markdown</option>
+                <option value="im">IM 简洁版</option>
+                <option value="email">邮件版</option>
+              </select>
+            </label>
+            {formattingOutput ? <small>格式化中</small> : null}
+          </div>
           <article className="report-preview">
-            {outputContent ? <pre>{outputContent}</pre> : <EmptyState />}
+            {outputContent ? <pre>{formattedOutput || outputContent}</pre> : <EmptyState />}
           </article>
           <div className="output-actions">
             <button type="button" className="secondary-action" onClick={handleOptimize} disabled={!currentReport || optimizing}>

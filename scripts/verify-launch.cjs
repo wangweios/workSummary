@@ -116,6 +116,18 @@ async function main() {
     });
     if (!generated.report.content.includes("本地体验稿")) throw new Error("Missing local draft fallback marker");
     if (!generated.score || generated.score.total < 1) throw new Error("Missing score");
+    const emailFormatted = await request("POST", "/api/reports/format", {
+      content: generated.report.content,
+      format: "email",
+      reportType: "daily"
+    });
+    if (!emailFormatted.content.includes("主题：日报汇报")) throw new Error("Email formatting missing subject");
+    const imFormatted = await request("POST", "/api/reports/format", {
+      content: generated.report.content,
+      format: "im",
+      reportType: "daily"
+    });
+    if (imFormatted.content.includes("#")) throw new Error("IM formatting did not strip markdown headings");
 
     const feedback = await request("POST", "/api/feedback", {
       rating: 4,

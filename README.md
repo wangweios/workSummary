@@ -12,6 +12,7 @@
 - 上线级数据控制：支持导出本地数据、清空本地数据、健康检查。
 - 无 Key 体验：未配置 API Key 时可生成本地体验稿，便于先验证工作流。
 - 粘贴拆解：把会议纪要、流水记录或客户沟通粘贴到补充区，可一键拆成当前岗位字段草稿。
+- 复制格式：同一份报告可按 Markdown、IM 简洁版、邮件版预览和复制。
 
 ## 本地启动
 
@@ -75,6 +76,7 @@ pnpm verify:product
 - `/api/health` initializes storage and default boss personas.
 - `/api/reports/generate` can create a no-key local draft and score it.
 - `/api/inputs/extract` can turn pasted work material into role-specific field drafts.
+- `/api/reports/format` can prepare Markdown, IM, and email-ready output.
 - `/api/feedback` saves a user-fit feedback record.
 - `/api/export` includes reports and feedback without credential-like text.
 - `/api/settings/reset` restores a clean local workspace.
@@ -88,6 +90,7 @@ For custom test environments, set `WORK_SUMMARY_DB_PATH` to point the app at an 
 - Daily, weekly, and monthly guidance exists for every role.
 - Feedback storage, export privacy, and no-key local draft fallback remain present.
 - Paste-to-fields extraction remains wired into API and UI.
+- Markdown, IM, and email-ready copy formats remain wired into API and UI.
 - Product, launch, and user-fit docs still describe the promised capabilities.
 
 ## Feedback API

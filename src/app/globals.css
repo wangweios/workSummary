@@ -424,6 +424,23 @@ textarea:focus {
   width: 210px;
 }
 
+.format-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.format-row label {
+  min-width: 180px;
+}
+
+.format-row small {
+  color: var(--muted);
+  font-size: 12px;
+  padding-bottom: 11px;
+}
+
 .report-preview {
   min-height: 520px;
   max-height: 640px;

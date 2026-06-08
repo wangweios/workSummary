@@ -22,6 +22,7 @@ const rolePresets = read("src/lib/role-presets.ts");
 const types = read("src/lib/types.ts");
 const db = read("src/lib/db.ts");
 const extractor = read("src/lib/input-extractor.ts");
+const formatter = read("src/lib/report-formatter.ts");
 const reportService = read("src/lib/report-service.ts");
 const page = read("src/app/page.tsx");
 const packageJson = JSON.parse(read("package.json"));
@@ -79,6 +80,8 @@ includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "lis
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
 includesAll(extractor, requiredRoles, "input extractor role coverage");
 includesAll(page, ["extractFieldsFromPaste", "/api/inputs/extract", "WandSparkles"], "input extraction UI contract");
+includesAll(formatter, ["markdown", "im", "email", "formatReportOutput"], "report formatter contract");
+includesAll(page, ["outputFormat", "/api/reports/format", "IM 简洁版", "邮件版"], "report format UI contract");
 includesAll(db, ["sanitizeExport", "API_KEY", "Bearer [redacted]"], "export privacy contract");
 includesAll(reportService, ["本地体验稿", "暂无量化数据", "buildLocalExperienceReport"], "no-key and no-fabrication fallback");
 
@@ -105,6 +108,7 @@ console.log(JSON.stringify({
     "feedback storage",
     "feedback UI",
     "input extraction",
+    "copy formatting",
     "export privacy",
     "no-key fallback",
     "launch docs"
