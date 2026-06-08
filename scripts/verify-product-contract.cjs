@@ -22,6 +22,7 @@ const rolePresets = read("src/lib/role-presets.ts");
 const types = read("src/lib/types.ts");
 const db = read("src/lib/db.ts");
 const extractor = read("src/lib/input-extractor.ts");
+const preflight = read("src/lib/input-preflight.ts");
 const formatter = read("src/lib/report-formatter.ts");
 const reportService = read("src/lib/report-service.ts");
 const page = read("src/app/page.tsx");
@@ -80,6 +81,8 @@ includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "lis
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
 includesAll(extractor, requiredRoles, "input extractor role coverage");
 includesAll(page, ["extractFieldsFromPaste", "/api/inputs/extract", "WandSparkles"], "input extraction UI contract");
+includesAll(preflight, ["analyzeWorkInput", "数据支撑", "风险问题", "下一步", "领导支持"], "input preflight contract");
+includesAll(page, ["runInputPreflight", "/api/inputs/preflight", "preflight"], "input preflight UI contract");
 includesAll(formatter, ["markdown", "im", "email", "formatReportOutput"], "report formatter contract");
 includesAll(page, ["outputFormat", "/api/reports/format", "IM 简洁版", "邮件版"], "report format UI contract");
 includesAll(db, ["sanitizeExport", "API_KEY", "Bearer [redacted]"], "export privacy contract");
@@ -108,6 +111,7 @@ console.log(JSON.stringify({
     "feedback storage",
     "feedback UI",
     "input extraction",
+    "input preflight",
     "copy formatting",
     "export privacy",
     "no-key fallback",

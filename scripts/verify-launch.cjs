@@ -85,6 +85,24 @@ async function main() {
     });
     if (!extracted.fields.visits?.value) throw new Error("Input extraction did not fill sales visit field");
     if (!extracted.fields.revenue?.value) throw new Error("Input extraction did not fill sales revenue field");
+    const preflight = await request("POST", "/api/inputs/preflight", {
+      rolePresetId: "sales",
+      workInput: {
+        reportType: "daily",
+        periodStart: "2026-06-08",
+        periodEnd: "2026-06-08",
+        fields: {
+          "拜访/沟通": "Visited two renewal customers and confirmed decision process.",
+          "成交/金额": "Estimated pipeline 120k pending legal review.",
+          "回款风险": "One customer payment approval may slip by one week.",
+          "下周推进": "Send revised quote and ask manager to support legal escalation."
+        },
+        extraText: "Customer feedback: pricing is acceptable.",
+        historyFrom: "2026-06-08",
+        historyTo: "2026-06-08"
+      }
+    });
+    if (!preflight.score || !preflight.checks?.length) throw new Error("Input preflight did not return checks");
 
     const generated = await request("POST", "/api/reports/generate", {
       rolePresetId: "sales",

@@ -12,6 +12,7 @@ import {
   Database,
   Download,
   Gauge,
+  ListChecks,
   MessageSquareText,
   RefreshCcw,
   Save,
@@ -46,6 +47,19 @@ type FeedbackDraft = {
 };
 
 type ReportOutputFormat = "markdown" | "im" | "email";
+
+type PreflightResult = {
+  score: number;
+  ready: boolean;
+  summary: string;
+  checks: Array<{
+    id: string;
+    label: string;
+    severity: "ok" | "warn" | "missing";
+    message: string;
+    suggestion: string;
+  }>;
+};
 
 const reportTypes: Array<{ id: ReportType; label: string }> = [
   { id: "daily", label: "日报" },
@@ -111,6 +125,8 @@ export default function HomePage() {
   const [formattingOutput, setFormattingOutput] = useState(false);
   const [loading, setLoading] = useState(false);
   const [extracting, setExtracting] = useState(false);
+  const [checkingInput, setCheckingInput] = useState(false);
+  const [preflight, setPreflight] = useState<PreflightResult | null>(null);
   const [optimizing, setOptimizing] = useState(false);
   const [savingPersona, setSavingPersona] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
@@ -334,6 +350,38 @@ export default function HomePage() {
       setError(caught instanceof Error ? caught.message : "拆解材料失败。");
     } finally {
       setExtracting(false);
+    }
+  }
+
+  async function runInputPreflight() {
+    setError("");
+    setNotice("");
+    setCheckingInput(true);
+    try {
+      const response = await fetch("/api/inputs/preflight", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rolePresetId: selectedPresetId,
+          workInput: {
+            reportType,
+            periodStart,
+            periodEnd,
+            fields: labeledFields(),
+            extraText,
+            historyFrom,
+            historyTo
+          }
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "输入体检失败。");
+      setPreflight(data);
+      setNotice(data.summary || "输入体检完成。");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "输入体检失败。");
+    } finally {
+      setCheckingInput(false);
     }
   }
 
@@ -766,6 +814,27 @@ export default function HomePage() {
             {loading ? "生成中" : "生成并评分"}
             <ChevronRight size={18} aria-hidden />
           </button>
+          <button type="button" className="secondary-action" onClick={runInputPreflight} disabled={checkingInput}>
+            <ListChecks size={16} aria-hidden />
+            {checkingInput ? "体检中" : "输入体检"}
+          </button>
+          {preflight ? (
+            <div className="preflight-box">
+              <div className="preflight-head">
+                <strong>{preflight.score}</strong>
+                <span>{preflight.summary}</span>
+              </div>
+              <div className="preflight-list">
+                {preflight.checks.map((check) => (
+                  <div className={`preflight-item ${check.severity}`} key={check.id}>
+                    <b>{check.label}</b>
+                    <p>{check.message}</p>
+                    <small>{check.suggestion}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </section>
 
         <section className="panel output-panel">
