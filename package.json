@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "verify:launch": "node scripts/verify-launch.cjs"
+    "verify:launch": "node scripts/verify-launch.cjs",
+    "verify:product": "node scripts/verify-product-contract.cjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

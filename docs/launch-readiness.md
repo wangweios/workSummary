@@ -49,3 +49,7 @@ Added an automated launch verification command: `pnpm verify:launch`.
 The verification uses a temporary SQLite database through `WORK_SUMMARY_DB_PATH`, so release checks do not pollute real local user data. It covers health check, local no-key generation, scoring, feedback capture, export privacy, and reset.
 
 Added `/api/feedback` as the first product feedback loop. This gives the team a concrete place to capture whether the product is solving the user's actual reporting pain instead of only relying on assumptions.
+
+Added product contract verification: `pnpm verify:product`.
+
+This check protects the non-negotiable product promises: 5 role presets, 7 scoring dimensions, 8 boss persona tags, daily/weekly/monthly guidance, feedback storage, export privacy, no-key fallback, and launch/user-fit documentation.

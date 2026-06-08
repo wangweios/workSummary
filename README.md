@@ -66,6 +66,7 @@ Run the full local production smoke test before release:
 ```bash
 pnpm build
 pnpm verify:launch
+pnpm verify:product
 ```
 
 `verify:launch` starts `next start` on an isolated port with a temporary SQLite database, then verifies:
@@ -75,6 +76,16 @@ pnpm verify:launch
 - `/api/feedback` saves a user-fit feedback record.
 - `/api/export` includes reports and feedback without credential-like text.
 - `/api/settings/reset` restores a clean local workspace.
+
+For custom test environments, set `WORK_SUMMARY_DB_PATH` to point the app at an isolated SQLite file.
+
+`verify:product` checks the product contract that should not regress during optimization:
+
+- 5 role presets remain available and role-specific.
+- 7 scoring dimensions and 8 boss persona tags remain wired.
+- Daily, weekly, and monthly guidance exists for every role.
+- Feedback storage, export privacy, and no-key local draft fallback remain present.
+- Product, launch, and user-fit docs still describe the promised capabilities.
 
 ## Feedback API
 
