@@ -12,7 +12,7 @@
 - 上线级数据控制：支持导出本地数据、清空本地数据、健康检查。
 - 无 Key 体验：未配置 API Key 时可生成本地体验稿，便于先验证工作流。
 - 粘贴拆解：把会议纪要、流水记录或客户沟通粘贴到补充区，可一键拆成当前岗位字段草稿。
-- 输入体检：生成前检查数据、风险、下一步、领导支持和岗位字段覆盖度。
+- 输入体检：生成前检查数据、风险、下一步、领导支持、岗位字段覆盖度，以及当前汇报打法需要的关键信号。
 - 复制格式：同一份报告可按 Markdown、IM 简洁版、邮件版预览和复制。
 - 模型诊断：可在生成前测试当前 AI 供应商、模型名和 API Key 是否可用。
 - 市场打法：可选择高层快读、风险预警、成果证明、客户/收入推进、质量/发布判断五种结构。
@@ -80,7 +80,7 @@ pnpm verify:product
 - `/api/health` initializes storage and default boss personas.
 - `/api/reports/generate` can create a no-key local draft and score it.
 - `/api/inputs/extract` can turn pasted work material into role-specific field drafts.
-- `/api/inputs/preflight` checks whether the input is ready for a high-quality report.
+- `/api/inputs/preflight` checks whether the input is ready for a high-quality report, including selected playbook-specific signals.
 - `/api/providers/test` can diagnose missing API keys or test configured model connectivity.
 - Market playbooks let the user choose executive brief, risk warning, outcome proof, customer/revenue, or quality/release structure.
 - `/api/playbooks/recommend` can recommend the best playbook from role, report type, and input signals.
@@ -98,7 +98,7 @@ For custom test environments, set `WORK_SUMMARY_DB_PATH` to point the app at an 
 - Daily, weekly, and monthly guidance exists for every role.
 - Feedback storage, export privacy, and no-key local draft fallback remain present.
 - Paste-to-fields extraction remains wired into API and UI.
-- Input preflight remains wired into API and UI.
+- Input preflight remains wired into API and UI, including selected playbook-specific signal checks.
 - Provider diagnostics remain wired into API and UI.
 - Playbook recommendation remains wired into API and UI.
 - Markdown, IM, and email-ready copy formats remain wired into API and UI.

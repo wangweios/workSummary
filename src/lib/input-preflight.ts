@@ -1,3 +1,4 @@
+import { getMarketPlaybook } from "@/lib/market-playbooks";
 import { getRolePreset } from "@/lib/role-presets";
 import type { WorkInput } from "@/lib/types";
 
@@ -21,6 +22,7 @@ export function analyzeWorkInput(input: {
   workInput: WorkInput;
 }) {
   const preset = getRolePreset(input.rolePresetId);
+  const playbook = getMarketPlaybook(input.workInput.playbookId);
   const fields = input.workInput.fields || {};
   const text = Object.values(fields).join("\n") + "\n" + (input.workInput.extraText || "");
   const filledFields = Object.values(fields).filter((value) => String(value || "").trim()).length;
@@ -73,6 +75,7 @@ export function analyzeWorkInput(input: {
     message: `当前已填写 ${filledFields}/${preset.fields.length} 个岗位字段。`,
     suggestion: filledFields >= 3 ? "覆盖度足够生成初稿。" : "建议至少补齐 3 个字段，尤其是成果、风险和下一步。"
   });
+  checks.push(...buildPlaybookChecks(playbook, text));
 
   const score = Math.round(
     checks.reduce((sum, check) => sum + (check.severity === "ok" ? 100 : check.severity === "warn" ? 62 : 20), 0) /
@@ -85,10 +88,10 @@ export function analyzeWorkInput(input: {
     checks,
     summary:
       score >= 82
-        ? "输入材料较完整，可以生成质量较好的汇报。"
+        ? `输入材料较完整，可以按“${playbook.name}”生成质量较好的汇报。`
         : score >= 60
-          ? "输入材料基本可用，建议先补齐黄色/红色项再生成。"
-          : "输入材料偏少，建议补充成果、数据、风险和下一步后再生成。"
+          ? `输入材料基本可用，建议先补齐黄色/红色项，让“${playbook.name}”更有说服力。`
+          : `输入材料偏少，建议按“${playbook.name}”补充关键证据、风险和下一步后再生成。`
   };
 }
 
@@ -106,4 +109,17 @@ function buildPatternCheck(input: {
     message: input.matched ? "已识别到相关信息。" : input.missingMessage,
     suggestion: input.matched ? "继续保持具体表达。" : input.missingSuggestion
   };
+}
+
+function buildPlaybookChecks(playbook: ReturnType<typeof getMarketPlaybook>, text: string): PreflightCheck[] {
+  return playbook.preflightSignals.map((signal) => {
+    const matched = signal.pattern.test(text);
+    return {
+      id: `playbook_${playbook.id}_${signal.id}`,
+      label: `${playbook.shortName}：${signal.label}`,
+      severity: matched ? "ok" : "warn",
+      message: matched ? "已识别到该打法需要的关键信号。" : signal.missingMessage,
+      suggestion: matched ? "保留事实依据，避免扩大表达。" : signal.suggestion
+    };
+  });
 }

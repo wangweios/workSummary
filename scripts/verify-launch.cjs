@@ -141,6 +141,9 @@ async function main() {
       }
     });
     if (!preflight.score || !preflight.checks?.length) throw new Error("Input preflight did not return checks");
+    if (!preflight.checks.some((check) => check.id === "playbook_customer_revenue_customer_stage")) {
+      throw new Error("Input preflight did not include selected playbook signal checks");
+    }
 
     const generated = await request("POST", "/api/reports/generate", {
       rolePresetId: "sales",

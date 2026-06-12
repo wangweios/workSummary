@@ -81,13 +81,13 @@ for (const roleId of requiredRoles) {
 
 includesAll(types, ["UserFeedbackInput", "UserFeedback", "ReportType", "ScoreDimensionId", "playbookId"], "public product types");
 includesAll(playbooks, ["executive_brief", "risk_blocker", "outcome_proof", "customer_revenue", "quality_release"], "market playbook ids");
-includesAll(playbooks, ["sourceProducts", "marketSignals", "generationRules", "scoreEmphasis"], "market playbook research contract");
+includesAll(playbooks, ["sourceProducts", "marketSignals", "preflightSignals", "generationRules", "scoreEmphasis"], "market playbook research contract");
 includesAll(recommender, ["recommendMarketPlaybook", "roleScores", "keywordSignals", "alternatives"], "playbook recommendation contract");
 includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "listFeedback"], "feedback storage contract");
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
 includesAll(extractor, requiredRoles, "input extractor role coverage");
 includesAll(page, ["extractFieldsFromPaste", "/api/inputs/extract", "WandSparkles"], "input extraction UI contract");
-includesAll(preflight, ["analyzeWorkInput", "数据支撑", "风险问题", "下一步", "领导支持"], "input preflight contract");
+includesAll(preflight, ["analyzeWorkInput", "getMarketPlaybook", "buildPlaybookChecks", "playbook_", "数据支撑", "风险问题", "下一步", "领导支持"], "input preflight contract");
 includesAll(page, ["runInputPreflight", "/api/inputs/preflight", "preflight"], "input preflight UI contract");
 includesAll(formatter, ["markdown", "im", "email", "formatReportOutput"], "report formatter contract");
 includesAll(page, ["outputFormat", "/api/reports/format", "IM 简洁版", "邮件版"], "report format UI contract");
