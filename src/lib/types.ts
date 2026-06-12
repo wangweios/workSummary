@@ -67,6 +67,7 @@ export interface BossPersona {
 
 export interface WorkInput {
   reportType: ReportType;
+  playbookId?: string;
   periodStart: string;
   periodEnd: string;
   fields: Record<string, string>;

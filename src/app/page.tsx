@@ -8,12 +8,14 @@ import {
   Check,
   ChevronRight,
   Clipboard,
+  Compass,
   Copy,
   Database,
   Download,
   Gauge,
   ListChecks,
   MessageSquareText,
+  PlugZap,
   RefreshCcw,
   Save,
   Send,
@@ -27,6 +29,7 @@ import {
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { BossPersona, BossTagId, ProviderInfo, ReportRecord, ReportScore, ReportType, RolePreset } from "@/lib/types";
 import { bossTagLabels, scoreDimensionLabels } from "@/lib/role-presets";
+import { marketPlaybooks } from "@/lib/market-playbooks";
 
 type RoleDraft = {
   id?: string;
@@ -108,6 +111,7 @@ export default function HomePage() {
   const [reportType, setReportType] = useState<ReportType>("daily");
   const [selectedPresetId, setSelectedPresetId] = useState("product_manager");
   const [selectedBossId, setSelectedBossId] = useState("");
+  const [selectedPlaybookId, setSelectedPlaybookId] = useState("executive_brief");
   const [selectedProviderId, setSelectedProviderId] = useState("openai");
   const [model, setModel] = useState("");
   const [roleDraft, setRoleDraft] = useState<RoleDraft>(initialRoleDraft());
@@ -128,6 +132,7 @@ export default function HomePage() {
   const [checkingInput, setCheckingInput] = useState(false);
   const [preflight, setPreflight] = useState<PreflightResult | null>(null);
   const [optimizing, setOptimizing] = useState(false);
+  const [testingProvider, setTestingProvider] = useState(false);
   const [savingPersona, setSavingPersona] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
   const [sendingFeedback, setSendingFeedback] = useState(false);
@@ -149,6 +154,11 @@ export default function HomePage() {
   const selectedProvider = useMemo(
     () => providers.find((provider) => provider.id === selectedProviderId) || providers[0],
     [providers, selectedProviderId]
+  );
+
+  const selectedPlaybook = useMemo(
+    () => marketPlaybooks.find((playbook) => playbook.id === selectedPlaybookId) || marketPlaybooks[0],
+    [selectedPlaybookId]
   );
 
   const latestScore = useMemo(() => currentReport?.scores.at(-1), [currentReport]);
@@ -293,6 +303,7 @@ export default function HomePage() {
           model,
           workInput: {
             reportType,
+            playbookId: selectedPlaybookId,
             periodStart,
             periodEnd,
             fields: labeledFields(),
@@ -353,6 +364,35 @@ export default function HomePage() {
     }
   }
 
+  async function testCurrentProvider() {
+    setError("");
+    setNotice("");
+    setTestingProvider(true);
+    try {
+      const response = await fetch("/api/providers/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          providerId: selectedProviderId,
+          model
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "模型测试失败。");
+      if (data.ok) {
+        setNotice(`${data.providerName || "AI"} 连接成功，耗时 ${data.latencyMs}ms。`);
+      } else if (data.configured === false) {
+        setNotice(data.message || "当前模型尚未配置 API Key，可先使用本地体验稿。");
+      } else {
+        setError(data.message || "模型连接失败，请检查模型名、Key 或网络。");
+      }
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "模型测试失败。");
+    } finally {
+      setTestingProvider(false);
+    }
+  }
+
   async function runInputPreflight() {
     setError("");
     setNotice("");
@@ -365,6 +405,7 @@ export default function HomePage() {
           rolePresetId: selectedPresetId,
           workInput: {
             reportType,
+            playbookId: selectedPlaybookId,
             periodStart,
             periodEnd,
             fields: labeledFields(),
@@ -583,6 +624,10 @@ export default function HomePage() {
             <span>模型</span>
             <input value={model} onChange={(event) => setModel(event.target.value)} list="model-options" />
           </label>
+          <button type="button" className="provider-test-button" onClick={testCurrentProvider} disabled={testingProvider || !selectedProvider}>
+            <PlugZap size={16} aria-hidden />
+            {testingProvider ? "测试中" : "测试模型"}
+          </button>
           <datalist id="model-options">
             {selectedProvider?.models.map((item) => (
               <option key={item} value={item} />
@@ -771,6 +816,34 @@ export default function HomePage() {
               </button>
             </>
           )}
+        </section>
+
+        <section className="panel playbook-panel">
+          <div className="panel-title">
+            <Compass size={18} aria-hidden />
+            <h2>汇报打法</h2>
+          </div>
+          <div className="playbook-options">
+            {marketPlaybooks.map((playbook) => (
+              <button
+                type="button"
+                key={playbook.id}
+                className={selectedPlaybookId === playbook.id ? "active" : ""}
+                onClick={() => setSelectedPlaybookId(playbook.id)}
+              >
+                <span>{playbook.shortName}</span>
+              </button>
+            ))}
+          </div>
+          <div className="playbook-summary">
+            <strong>{selectedPlaybook.name}</strong>
+            <p>{selectedPlaybook.summary}</p>
+            <div className="signal-list">
+              {selectedPlaybook.marketSignals.map((signal) => (
+                <span key={signal}>{signal}</span>
+              ))}
+            </div>
+          </div>
         </section>
 
         <section className="panel input-panel">

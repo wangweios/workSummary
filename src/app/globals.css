@@ -117,6 +117,21 @@ h1 {
   background: #fff9eb;
 }
 
+.provider-test-button {
+  min-height: 40px;
+  border-radius: 8px;
+  border: 1px solid #cfe0d2;
+  background: #eff5f0;
+  color: var(--green-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 label {
   display: grid;
   gap: 7px;
@@ -176,7 +191,8 @@ textarea:focus {
 
 .controls-panel,
 .role-panel,
-.boss-panel {
+.boss-panel,
+.playbook-panel {
   display: grid;
   gap: 14px;
 }
@@ -231,7 +247,8 @@ textarea:focus {
 }
 
 .segmented,
-.role-tabs {
+.role-tabs,
+.playbook-options {
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
@@ -243,7 +260,8 @@ textarea:focus {
 }
 
 .segmented button,
-.role-tabs button {
+.role-tabs button,
+.playbook-options button {
   border: 0;
   background: transparent;
   border-radius: 6px;
@@ -254,13 +272,19 @@ textarea:focus {
 }
 
 .segmented button.active,
-.role-tabs button.active {
+.role-tabs button.active,
+.playbook-options button.active {
   background: var(--panel);
   color: var(--green-strong);
   box-shadow: 0 1px 6px rgba(31, 44, 34, 0.1);
 }
 
 .role-tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-auto-flow: unset;
+}
+
+.playbook-options {
   grid-template-columns: repeat(5, minmax(0, 1fr));
   grid-auto-flow: unset;
 }
@@ -290,6 +314,39 @@ textarea:focus {
   color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
+}
+
+.playbook-summary {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.playbook-summary strong {
+  font-size: 14px;
+}
+
+.playbook-summary p {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.signal-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.signal-list span {
+  border: 1px solid #cfe0d2;
+  background: #f3f8f4;
+  color: #2f634a;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 1.2;
 }
 
 .stacked-fields {
@@ -738,6 +795,10 @@ meter {
 
   .role-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .playbook-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .output-tabs {

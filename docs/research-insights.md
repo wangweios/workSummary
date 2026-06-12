@@ -13,6 +13,10 @@
 
 - 项目状态汇报普遍强调目标、进度、风险、阻塞和下一步，适合转化为本产品的核心报告结构。参考 Atlassian 的项目状态报告实践：https://www.atlassian.com/agile/project-management/status-report
 - Asana 的状态报告模板强调让团队对进度、阻碍和下一步保持同步，支持“历史沉淀 -> 周期汇总”的产品路径：https://asana.com/templates/status-report
+- Dailybot 把 check-in、AI report、blocker triage 和跨系统信号放在一个报告里，说明“阻塞要前置并能形成动作”是 AI 汇报产品的重要差异化：https://www.dailybot.com/
+- Geekbot 的异步 standup 与销售报告模板强调自动收集团队更新、blocker 和业务进展，验证了“低摩擦输入 -> 结构化输出”的路径：https://geekbot.com/
+- Range 强调异步 check-in、目标连接和 75+ 工具集成，说明周报/月报要从“做了什么”上升到“是否推动共同目标”：https://www.range.co/
+- LION Report 使用 Last week、Issues、Opportunities、Next week 的结构，适合沉淀为“成果证明”打法：https://lion.report/
 - 测试周报模板通常包含测试范围、执行情况、缺陷、阻塞和风险，这验证了“测试岗位不能套通用模板”：https://www.testingdocs.com/weekly-status-report-template/
 - 销售周报模板强调线索、管道、收入、客户反馈和下一步，验证了销售岗位需要金额/商机阶段/回款风险字段：https://www.enerpize.com/templates/weekly-sales-report
 - AI 生成长文/报告类产品需要保留事实来源与结构化输入，降低幻觉风险。SmartBook 论文可作为“结构化材料生成报告”的参考：https://arxiv.org/abs/2303.14337
@@ -25,6 +29,7 @@
 - 周报/月报必须使用历史沉淀，同时允许用户补充本周期重点。
 - 首次使用不能卡死在 API Key，必须提供本地体验稿和清晰配置提示。
 - 本地工具也要提供数据导出和清空，解决隐私与可迁移问题。
+- 在岗位和老板人设之间增加“汇报打法”：高层快读、风险预警、成果证明、客户/收入推进、质量/发布判断，让竞品调研沉淀为用户可选择的生成策略。
 
 ## 仍需继续验证的问题
 

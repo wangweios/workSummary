@@ -56,6 +56,78 @@ export function getProviderInfo(providerId: string): ProviderInfo {
   return listProviders().find((provider) => provider.id === providerId) ?? listProviders()[0];
 }
 
+export async function testProviderConnection(input: {
+  providerId: string;
+  model?: string;
+}) {
+  const definition = providerDefinitions.find((provider) => provider.id === input.providerId);
+  if (!definition) {
+    return {
+      ok: false,
+      configured: false,
+      providerId: input.providerId,
+      providerName: input.providerId,
+      model: input.model || "",
+      latencyMs: 0,
+      message: `Unsupported provider: ${input.providerId}`
+    };
+  }
+
+  const model = input.model || process.env[definition.defaultModelEnv] || definition.defaultModel;
+  if (!process.env[definition.apiKeyEnv]) {
+    return {
+      ok: false,
+      configured: false,
+      providerId: definition.id,
+      providerName: definition.name,
+      model,
+      apiKeyEnv: definition.apiKeyEnv,
+      latencyMs: 0,
+      message: `Missing ${definition.apiKeyEnv}. Add it to .env and restart the local server.`
+    };
+  }
+
+  const startedAt = Date.now();
+  try {
+    const sample = await callChatCompletion({
+      providerId: definition.id,
+      model,
+      temperature: 0,
+      messages: [
+        { role: "system", content: "Reply with OK only." },
+        { role: "user", content: "connection test" }
+      ]
+    });
+
+    return {
+      ok: true,
+      configured: true,
+      providerId: definition.id,
+      providerName: definition.name,
+      model,
+      latencyMs: Date.now() - startedAt,
+      sample: sample.slice(0, 80),
+      message: "Provider connection succeeded."
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      configured: true,
+      providerId: definition.id,
+      providerName: definition.name,
+      model,
+      latencyMs: Date.now() - startedAt,
+      message: sanitizeDiagnosticMessage(error instanceof Error ? error.message : "Provider connection failed.")
+    };
+  }
+}
+
+function sanitizeDiagnosticMessage(message: string) {
+  return message
+    .replace(/Bearer\s+[A-Za-z0-9._~+\/=:-]+/g, "Bearer [redacted]")
+    .replace(/[A-Z0-9_]*API_KEY/g, "API Key");
+}
+
 export async function callChatCompletion(input: {
   providerId: string;
   model?: string;

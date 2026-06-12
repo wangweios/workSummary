@@ -76,6 +76,24 @@ async function main() {
   try {
     const health = await waitForServer();
     if (!health.ok || health.database.bossCount < 3) throw new Error("Health check did not seed boss personas");
+    const providerTest = await request("POST", "/api/providers/test", {
+      providerId: "openai",
+      model: "gpt-4.1-mini"
+    });
+    const providerText = JSON.stringify(providerTest);
+    if (typeof providerTest.ok !== "boolean" || !providerTest.model || !providerTest.message) {
+      throw new Error("Provider diagnostic returned an invalid result");
+    }
+    if (providerText.includes("Bearer ")) {
+      throw new Error("Provider diagnostic leaked credential-like text");
+    }
+    if (providerTest.configured === false) {
+      if (!providerTest.apiKeyEnv) {
+        throw new Error("Provider diagnostic should return a clear missing-key result in verification mode");
+      }
+    } else {
+      if (!providerTest.providerId) throw new Error("Provider diagnostic missing provider id");
+    }
 
     const bosses = await request("GET", "/api/bosses");
     const bossId = bosses.bosses[0].id;
@@ -89,6 +107,7 @@ async function main() {
       rolePresetId: "sales",
       workInput: {
         reportType: "daily",
+        playbookId: "customer_revenue",
         periodStart: "2026-06-08",
         periodEnd: "2026-06-08",
         fields: {
@@ -119,6 +138,7 @@ async function main() {
       model: "gpt-4.1-mini",
       workInput: {
         reportType: "daily",
+        playbookId: "customer_revenue",
         periodStart: "2026-06-08",
         periodEnd: "2026-06-08",
         fields: {

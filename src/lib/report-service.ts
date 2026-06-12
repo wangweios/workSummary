@@ -1,5 +1,6 @@
 import { addReportScore, createReport, getBossPersona, getReport, listReportsForAggregation, updateReportOptimizedContent } from "@/lib/db";
 import { bossTagLabels, getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
+import { getMarketPlaybook } from "@/lib/market-playbooks";
 import type { BossPersona, ReportRecord, ReportScore, ScoreDimension, ScoreDimensionId, WorkInput } from "@/lib/types";
 import { callChatCompletion } from "@/lib/ai/providers";
 import { buildOptimizePrompt, buildReportPrompt, buildScorePrompt } from "@/lib/ai/prompts";
@@ -295,6 +296,7 @@ function buildLocalExperienceReport(input: {
   historyReports: ReportRecord[];
 }) {
   const preset = getRolePreset(input.rolePresetId);
+  const playbook = getMarketPlaybook(input.workInput.playbookId);
   const entries = Object.entries(input.workInput.fields || {}).filter(([, value]) => value?.trim());
   const extra = input.workInput.extraText.trim();
   const dataEntries = entries.filter(([label]) => /指标|数据|金额|成交|用例|缺陷|性能|稳定|线索|收入|回款/.test(label));
@@ -335,8 +337,8 @@ function buildLocalExperienceReport(input: {
     }
   ];
 
-  const riskFirst = input.bossPersona.tags.risk >= 75;
-  const dataFirst = input.bossPersona.tags.data >= 75;
+  const riskFirst = input.bossPersona.tags.risk >= 75 || playbook.id === "risk_blocker" || playbook.id === "quality_release";
+  const dataFirst = input.bossPersona.tags.data >= 75 || playbook.id === "outcome_proof" || playbook.id === "customer_revenue";
   const orderedSections = [...sections].sort((a, b) => {
     if (riskFirst && a.title.includes("风险")) return -1;
     if (riskFirst && b.title.includes("风险")) return 1;
@@ -349,6 +351,9 @@ function buildLocalExperienceReport(input: {
     `# ${preset.name}${reportTypeLabel(input.workInput.reportType)}（本地体验稿）`,
     "",
     `核心结论：本周期围绕${input.roleProfile.projectContext || preset.summary}推进，当前汇报重点应匹配领导关注的${highTags}；以下内容基于已填写事实整理，未补充的数据均按“暂无量化数据”处理。`,
+    "",
+    `汇报打法：${playbook.name} - ${playbook.summary}`,
+    `参考结构：${playbook.fallbackSections.join("、")}`,
     "",
     `周期：${input.workInput.periodStart || "未填写"} 至 ${input.workInput.periodEnd || "未填写"}`,
     "",

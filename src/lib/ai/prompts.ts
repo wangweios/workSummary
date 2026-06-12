@@ -1,4 +1,5 @@
 import { bossTagLabels, getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
+import { getMarketPlaybook } from "@/lib/market-playbooks";
 import type { BossPersona, ReportRecord, ReportScore, RoleProfile, WorkInput } from "@/lib/types";
 import { reportTypeLabel } from "@/lib/utils";
 
@@ -10,6 +11,7 @@ export function buildReportPrompt(input: {
   historyReports: ReportRecord[];
 }): Array<{ role: "system" | "user"; content: string }> {
   const preset = getRolePreset(input.rolePresetId);
+  const playbook = getMarketPlaybook(input.workInput.playbookId);
   const label = reportTypeLabel(input.workInput.reportType);
   return [
     {
@@ -40,6 +42,12 @@ export function buildReportPrompt(input: {
         `- 项目背景：${input.roleProfile.projectContext || "未填写"}`,
         `- 常用指标：${input.roleProfile.metrics || "未填写"}`,
         `- 偏好口吻：${input.roleProfile.tone || "稳妥正式"}`,
+        "",
+        "汇报打法（由同类状态报告/异步 standup 产品模式提炼）：",
+        `- 打法：${playbook.name}`,
+        `- 适用场景：${playbook.summary}`,
+        `- 市场关键信号：${playbook.marketSignals.join("、")}`,
+        `- 组织规则：${playbook.generationRules.join("；")}`,
         "",
         "老板人设：",
         `- 名称：${input.bossPersona.name}`,
@@ -73,6 +81,7 @@ export function buildScorePrompt(input: {
   rolePresetId: string;
 }): Array<{ role: "system" | "user"; content: string }> {
   const preset = getRolePreset(input.rolePresetId);
+  const playbook = getMarketPlaybook(input.workInput.playbookId);
   return [
     {
       role: "system",
@@ -89,6 +98,10 @@ export function buildScorePrompt(input: {
         Object.entries(preset.scoreWeights)
           .map(([key, weight]) => `- ${scoreDimensionLabels[key as keyof typeof scoreDimensionLabels]}：${weight}`)
           .join("\n"),
+        "",
+        "汇报打法：",
+        `- ${playbook.name}：${playbook.summary}`,
+        `- 加权关注：${playbook.scoreEmphasis.map((id) => scoreDimensionLabels[id]).join("、")}`,
         "",
         "老板人设：",
         `- ${input.bossPersona.name}`,
@@ -116,6 +129,7 @@ export function buildOptimizePrompt(input: {
   report: ReportRecord;
 }): Array<{ role: "system" | "user"; content: string }> {
   const preset = getRolePreset(input.report.rolePresetId);
+  const playbook = getMarketPlaybook(input.report.input.playbookId);
   return [
     {
       role: "system",
@@ -130,6 +144,7 @@ export function buildOptimizePrompt(input: {
       role: "user",
       content: [
         `岗位：${preset.name}`,
+        `汇报打法：${playbook.name}；${playbook.generationRules.join("；")}`,
         `老板人设：${input.report.bossPersona.name}；${formatBossTags(input.report.bossPersona)}`,
         "",
         "原始事实输入：",
