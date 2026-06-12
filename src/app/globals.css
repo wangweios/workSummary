@@ -295,6 +295,18 @@ textarea:focus {
   gap: 10px;
 }
 
+.status-context-fields {
+  display: grid;
+  grid-template-columns: 0.82fr 1fr 1fr;
+  gap: 10px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+
+.status-context-fields textarea {
+  min-height: 74px;
+}
+
 .inline-label {
   display: flex;
   align-items: center;
@@ -821,7 +833,8 @@ meter {
   .topbar,
   .workspace-grid,
   .input-grid,
-  .two-col {
+  .two-col,
+  .status-context-fields {
     grid-template-columns: 1fr;
   }
 

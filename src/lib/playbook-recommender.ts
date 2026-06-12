@@ -1,4 +1,5 @@
 import { getMarketPlaybook, marketPlaybooks, type MarketPlaybookId } from "@/lib/market-playbooks";
+import { collectStatusContextText } from "@/lib/status-context";
 import type { ReportType, WorkInput } from "@/lib/types";
 
 type ScoreMap = Record<MarketPlaybookId, number>;
@@ -126,6 +127,17 @@ export function recommendMarketPlaybook(input: {
   applyScores(scores, reportTypeScores[input.reportType] || {}, reasonsByPlaybook, reportTypeReason(input.reportType));
 
   const text = collectWorkText(input.workInput);
+  const health = input.workInput?.statusHealth;
+  if (health === "blocked" || health === "at_risk") {
+    scores.risk_blocker += 26;
+    reasonsByPlaybook.risk_blocker.push("整体状态已标记为有风险或已阻塞。");
+    signals.push("整体状态提示风险/阻塞");
+  } else if (health === "attention") {
+    scores.risk_blocker += 12;
+    scores.executive_brief += 6;
+    reasonsByPlaybook.risk_blocker.push("整体状态需要关注，适合前置风险和跟进动作。");
+    signals.push("整体状态需关注");
+  }
   for (const signal of keywordSignals) {
     if (signal.pattern.test(text)) {
       scores[signal.playbookId] += signal.points;
@@ -198,7 +210,12 @@ function reportTypeReason(reportType: ReportType) {
 
 function collectWorkText(workInput?: Partial<WorkInput>) {
   if (!workInput) return "";
-  return [workInput.reportType, Object.values(workInput.fields || {}).join("\n"), workInput.extraText || ""].join("\n");
+  return [
+    workInput.reportType,
+    Object.values(workInput.fields || {}).join("\n"),
+    workInput.extraText || "",
+    collectStatusContextText(workInput)
+  ].join("\n");
 }
 
 function clamp(value: number, min: number, max: number) {

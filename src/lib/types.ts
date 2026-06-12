@@ -1,5 +1,7 @@
 export type ReportType = "daily" | "weekly" | "monthly";
 
+export type ReportHealth = "unknown" | "on_track" | "attention" | "at_risk" | "blocked";
+
 export type ScoreDimensionId =
   | "boss_fit"
   | "impact"
@@ -68,6 +70,9 @@ export interface BossPersona {
 export interface WorkInput {
   reportType: ReportType;
   playbookId?: string;
+  statusHealth?: ReportHealth;
+  goalStatement?: string;
+  decisionRequest?: string;
   periodStart: string;
   periodEnd: string;
   fields: Record<string, string>;

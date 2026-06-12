@@ -1,5 +1,6 @@
 import { getMarketPlaybook } from "@/lib/market-playbooks";
 import { getRolePreset } from "@/lib/role-presets";
+import { collectStatusContextText, getReportHealthOption } from "@/lib/status-context";
 import type { WorkInput } from "@/lib/types";
 
 export type PreflightSeverity = "ok" | "warn" | "missing";
@@ -24,10 +25,12 @@ export function analyzeWorkInput(input: {
   const preset = getRolePreset(input.rolePresetId);
   const playbook = getMarketPlaybook(input.workInput.playbookId);
   const fields = input.workInput.fields || {};
-  const text = Object.values(fields).join("\n") + "\n" + (input.workInput.extraText || "");
+  const statusText = collectStatusContextText(input.workInput);
+  const text = Object.values(fields).join("\n") + "\n" + (input.workInput.extraText || "") + "\n" + statusText;
   const filledFields = Object.values(fields).filter((value) => String(value || "").trim()).length;
   const requiredFields = preset.fields.filter((field) => field.required);
   const checks: PreflightCheck[] = [];
+  const health = getReportHealthOption(input.workInput.statusHealth);
 
   for (const field of requiredFields) {
     const value = String(fields[field.label] ?? fields[field.id] ?? "").trim();
@@ -62,11 +65,25 @@ export function analyzeWorkInput(input: {
     missingSuggestion: "补充下个动作、时间点、负责人、验收口径或需要谁配合。"
   }));
   checks.push({
+    id: "status_health",
+    label: "整体状态",
+    severity: health.id === "unknown" ? "warn" : "ok",
+    message: health.id === "unknown" ? "暂未判断整体健康度，领导需要自行猜测当前状态。" : `整体状态已标记为${health.label}。`,
+    suggestion: health.id === "unknown" ? "选择正常推进、需关注、有风险或已阻塞；不确定时保持未判断，生成时不会编造。" : "状态应与事实、风险和下一步保持一致。"
+  });
+  checks.push({
+    id: "goal_alignment",
+    label: "目标对齐",
+    severity: input.workInput.goalStatement?.trim() ? "ok" : "warn",
+    message: input.workInput.goalStatement?.trim() ? "已说明本周期目标或对齐对象。" : "缺少本周期目标，报告容易只描述动作。",
+    suggestion: input.workInput.goalStatement?.trim() ? "保持目标与成果对应。" : "补充对应 OKR、项目目标、收入目标、质量目标或本周期交付目标。"
+  });
+  checks.push({
     id: "leader_support",
     label: "领导支持",
-    severity: supportPattern.test(text) ? "ok" : "warn",
-    message: supportPattern.test(text) ? "已说明需要领导关注或确认的事项。" : "暂未说明是否需要领导支持。",
-    suggestion: supportPattern.test(text) ? "保持诉求明确。" : "如果不需要支持，可写暂无需领导额外协调；如果需要，请写清楚决策点或资源诉求。"
+    severity: supportPattern.test(text) || input.workInput.decisionRequest?.trim() ? "ok" : "warn",
+    message: supportPattern.test(text) || input.workInput.decisionRequest?.trim() ? "已说明需要领导关注或确认的事项。" : "暂未说明是否需要领导支持。",
+    suggestion: supportPattern.test(text) || input.workInput.decisionRequest?.trim() ? "保持诉求明确。" : "如果不需要支持，可写暂无需领导额外协调；如果需要，请写清楚决策点或资源诉求。"
   });
   checks.push({
     id: "coverage",

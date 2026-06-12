@@ -1,6 +1,7 @@
 import { addReportScore, createReport, getBossPersona, getReport, listReportsForAggregation, updateReportOptimizedContent } from "@/lib/db";
 import { bossTagLabels, getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
 import { getMarketPlaybook } from "@/lib/market-playbooks";
+import { getReportHealthOption, collectStatusContextText } from "@/lib/status-context";
 import type { BossPersona, ReportRecord, ReportScore, ScoreDimension, ScoreDimensionId, WorkInput } from "@/lib/types";
 import { callChatCompletion } from "@/lib/ai/providers";
 import { buildOptimizePrompt, buildReportPrompt, buildScorePrompt } from "@/lib/ai/prompts";
@@ -230,7 +231,7 @@ function heuristicScore(content: string, workInput: WorkInput, rolePresetId: str
   const hasNext = /下一步|明日|下周|计划|推进/.test(content);
   const hasSupport = /支持|决策|协调|确认|暂无需领导/.test(content);
   const hasSections = (content.match(/^#{1,3}\s/gm) || []).length >= 3 || (content.match(/\n[-*]\s/g) || []).length >= 4;
-  const inputText = Object.values(workInput.fields).join("\n") + "\n" + workInput.extraText;
+  const inputText = Object.values(workInput.fields).join("\n") + "\n" + workInput.extraText + "\n" + collectStatusContextText(workInput);
   const sparseInput = inputText.trim().length < 80;
 
   const scores: Record<ScoreDimensionId, number> = {
@@ -297,6 +298,7 @@ function buildLocalExperienceReport(input: {
 }) {
   const preset = getRolePreset(input.rolePresetId);
   const playbook = getMarketPlaybook(input.workInput.playbookId);
+  const health = getReportHealthOption(input.workInput.statusHealth);
   const entries = Object.entries(input.workInput.fields || {}).filter(([, value]) => value?.trim());
   const extra = input.workInput.extraText.trim();
   const dataEntries = entries.filter(([label]) => /指标|数据|金额|成交|用例|缺陷|性能|稳定|线索|收入|回款/.test(label));
@@ -354,6 +356,9 @@ function buildLocalExperienceReport(input: {
     "",
     `汇报打法：${playbook.name} - ${playbook.summary}`,
     `参考结构：${playbook.fallbackSections.join("、")}`,
+    `整体状态：${health.label} - ${health.summary}`,
+    `目标对齐：${input.workInput.goalStatement?.trim() || "未填写，建议补充本周期目标或对应 OKR/项目目标。"}`,
+    `决策/支持诉求：${input.workInput.decisionRequest?.trim() || "未填写；如无需支持，建议明确写暂无需领导额外协调。"}`,
     "",
     `周期：${input.workInput.periodStart || "未填写"} 至 ${input.workInput.periodEnd || "未填写"}`,
     "",

@@ -30,6 +30,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import type { BossPersona, BossTagId, ProviderInfo, ReportRecord, ReportScore, ReportType, RolePreset } from "@/lib/types";
 import { bossTagLabels, scoreDimensionLabels } from "@/lib/role-presets";
 import { marketPlaybooks } from "@/lib/market-playbooks";
+import { reportHealthOptions } from "@/lib/status-context";
 
 type RoleDraft = {
   id?: string;
@@ -125,6 +126,9 @@ export default function HomePage() {
   const [selectedPresetId, setSelectedPresetId] = useState("product_manager");
   const [selectedBossId, setSelectedBossId] = useState("");
   const [selectedPlaybookId, setSelectedPlaybookId] = useState("executive_brief");
+  const [statusHealth, setStatusHealth] = useState("unknown");
+  const [goalStatement, setGoalStatement] = useState("");
+  const [decisionRequest, setDecisionRequest] = useState("");
   const [selectedProviderId, setSelectedProviderId] = useState("openai");
   const [model, setModel] = useState("");
   const [roleDraft, setRoleDraft] = useState<RoleDraft>(initialRoleDraft());
@@ -323,6 +327,9 @@ export default function HomePage() {
           workInput: {
             reportType,
             playbookId: selectedPlaybookId,
+            statusHealth,
+            goalStatement,
+            decisionRequest,
             periodStart,
             periodEnd,
             fields: labeledFields(),
@@ -425,6 +432,9 @@ export default function HomePage() {
           workInput: {
             reportType,
             playbookId: selectedPlaybookId,
+            statusHealth,
+            goalStatement,
+            decisionRequest,
             periodStart,
             periodEnd,
             fields: labeledFields(),
@@ -458,6 +468,9 @@ export default function HomePage() {
           reportType,
           workInput: {
             reportType,
+            statusHealth,
+            goalStatement,
+            decisionRequest,
             periodStart,
             periodEnd,
             fields: labeledFields(),
@@ -751,6 +764,34 @@ export default function HomePage() {
               </div>
             </div>
           )}
+          <div className="status-context-fields">
+            <label>
+              <span>整体状态</span>
+              <select value={statusHealth} onChange={(event) => setStatusHealth(event.target.value)}>
+                {reportHealthOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="wide">
+              <span>本周期目标</span>
+              <textarea
+                value={goalStatement}
+                onChange={(event) => setGoalStatement(event.target.value)}
+                placeholder="例如：本周完成续费报价闭环、降低 P1 缺陷、推动核心需求进入验收。"
+              />
+            </label>
+            <label className="wide">
+              <span>决策/支持</span>
+              <textarea
+                value={decisionRequest}
+                onChange={(event) => setDecisionRequest(event.target.value)}
+                placeholder="例如：需要确认上线窗口、审批折扣、协调后端排期；没有则写暂无需领导额外协调。"
+              />
+            </label>
+          </div>
         </section>
 
         <section className="panel role-panel">

@@ -99,6 +99,9 @@ async function main() {
       reportType: "daily",
       workInput: {
         reportType: "daily",
+        statusHealth: "at_risk",
+        goalStatement: "Protect renewal pipeline and keep legal review moving.",
+        decisionRequest: "Need manager support to escalate legal review.",
         fields: {
           "拜访/沟通": "Visited two renewal customers and confirmed decision process.",
           "成交/金额": "Estimated pipeline 120k pending legal review.",
@@ -127,6 +130,9 @@ async function main() {
       workInput: {
         reportType: "daily",
         playbookId: "customer_revenue",
+        statusHealth: "at_risk",
+        goalStatement: "Protect renewal pipeline and keep legal review moving.",
+        decisionRequest: "Need manager support to escalate legal review.",
         periodStart: "2026-06-08",
         periodEnd: "2026-06-08",
         fields: {
@@ -143,6 +149,9 @@ async function main() {
     if (!preflight.score || !preflight.checks?.length) throw new Error("Input preflight did not return checks");
     if (!preflight.checks.some((check) => check.id === "playbook_customer_revenue_customer_stage")) {
       throw new Error("Input preflight did not include selected playbook signal checks");
+    }
+    if (!preflight.checks.some((check) => check.id === "status_health" && check.severity === "ok")) {
+      throw new Error("Input preflight did not validate report health status");
     }
 
     const generated = await request("POST", "/api/reports/generate", {
@@ -161,6 +170,9 @@ async function main() {
       workInput: {
         reportType: "daily",
         playbookId: "customer_revenue",
+        statusHealth: "at_risk",
+        goalStatement: "Protect renewal pipeline and keep legal review moving.",
+        decisionRequest: "Need manager support to escalate legal review.",
         periodStart: "2026-06-08",
         periodEnd: "2026-06-08",
         fields: {
@@ -175,6 +187,7 @@ async function main() {
       }
     });
     if (!generated.report.content.includes("本地体验稿")) throw new Error("Missing local draft fallback marker");
+    if (!generated.report.content.includes("整体状态")) throw new Error("Generated local draft missing status context");
     if (!generated.score || generated.score.total < 1) throw new Error("Missing score");
     const emailFormatted = await request("POST", "/api/reports/format", {
       content: generated.report.content,

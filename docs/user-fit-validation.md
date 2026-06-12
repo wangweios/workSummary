@@ -7,6 +7,7 @@
 | 不知道领导想看什么 | 老板人设标签影响报告重点和评分 | 工作台支持结果、数据、风险、简洁等权重 |
 | 日报容易写成流水账 | 岗位专属字段引导用户输入成果、风险、下一步 | 5 个岗位预设字段不同 |
 | 不同岗位模板不通用 | 产品、前端、后端、测试、销售分别定义字段和评分权重 | `src/lib/role-presets.ts` |
+| 老板需要先判断整体状态 | 增加整体健康度、本周期目标和决策/支持诉求 | 页面“周期”面板和 `src/lib/status-context.ts` |
 | AI 容易编造 | Prompt 和本地体验稿都要求缺数据时写“暂无量化数据” | 运行时验证 `hasNoFabricationGuard=true` |
 | 首次没 API Key 卡住 | 无 Key 时生成本地体验稿 | 运行时验证 `hasLocalDraft=true` |
 | 本地隐私焦虑 | API Key 只读 `.env`，数据本地 SQLite，支持导出和清空 | `/api/export`、`/api/settings/reset` |

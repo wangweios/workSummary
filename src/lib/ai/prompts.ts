@@ -1,5 +1,6 @@
 import { bossTagLabels, getRolePreset, scoreDimensionLabels } from "@/lib/role-presets";
 import { getMarketPlaybook } from "@/lib/market-playbooks";
+import { formatStatusContext } from "@/lib/status-context";
 import type { BossPersona, ReportRecord, ReportScore, RoleProfile, WorkInput } from "@/lib/types";
 import { reportTypeLabel } from "@/lib/utils";
 
@@ -49,6 +50,9 @@ export function buildReportPrompt(input: {
         `- 市场关键信号：${playbook.marketSignals.join("、")}`,
         `- 组织规则：${playbook.generationRules.join("；")}`,
         "",
+        "状态/目标上下文：",
+        formatStatusContext(input.workInput),
+        "",
         "老板人设：",
         `- 名称：${input.bossPersona.name}`,
         `- 描述：${input.bossPersona.description || "未填写"}`,
@@ -65,6 +69,7 @@ export function buildReportPrompt(input: {
         "",
         "请生成一版“稳妥正式版”汇报，结构要求：",
         "- 开头必须有一句核心结论。",
+        "- 如果用户提供了整体状态、本周期目标或领导决策诉求，开头必须体现；如果整体状态为未判断，不要自行编造健康度。",
         "- 必须包含关键成果/进展、数据或暂无量化数据、风险问题、下一步计划。",
         "- 如果存在需要领导支持或决策的事项，请单独列出；没有则写“暂无需领导额外协调”。",
         "- 不要写夸张宣传语，不要把动作包装成不存在的结果。"
@@ -102,6 +107,9 @@ export function buildScorePrompt(input: {
         "汇报打法：",
         `- ${playbook.name}：${playbook.summary}`,
         `- 加权关注：${playbook.scoreEmphasis.map((id) => scoreDimensionLabels[id]).join("、")}`,
+        "",
+        "状态/目标上下文：",
+        formatStatusContext(input.workInput),
         "",
         "老板人设：",
         `- ${input.bossPersona.name}`,
@@ -145,6 +153,8 @@ export function buildOptimizePrompt(input: {
       content: [
         `岗位：${preset.name}`,
         `汇报打法：${playbook.name}；${playbook.generationRules.join("；")}`,
+        "状态/目标上下文：",
+        formatStatusContext(input.report.input),
         `老板人设：${input.report.bossPersona.name}；${formatBossTags(input.report.bossPersona)}`,
         "",
         "原始事实输入：",

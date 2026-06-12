@@ -27,7 +27,9 @@ const formatter = read("src/lib/report-formatter.ts");
 const providers = read("src/lib/ai/providers.ts");
 const playbooks = read("src/lib/market-playbooks.ts");
 const recommender = read("src/lib/playbook-recommender.ts");
+const statusContext = read("src/lib/status-context.ts");
 const reportService = read("src/lib/report-service.ts");
+const prompts = read("src/lib/ai/prompts.ts");
 const page = read("src/app/page.tsx");
 const packageJson = JSON.parse(read("package.json"));
 const readme = read("README.md");
@@ -79,7 +81,8 @@ for (const roleId of requiredRoles) {
   includesAll(roleBlock, requiredDimensions.map((dimension) => `${dimension}:`), `score weights for ${roleId}`);
 }
 
-includesAll(types, ["UserFeedbackInput", "UserFeedback", "ReportType", "ScoreDimensionId", "playbookId"], "public product types");
+includesAll(types, ["UserFeedbackInput", "UserFeedback", "ReportType", "ReportHealth", "ScoreDimensionId", "playbookId", "statusHealth", "goalStatement", "decisionRequest"], "public product types");
+includesAll(statusContext, ["reportHealthOptions", "unknown", "on_track", "attention", "at_risk", "blocked", "formatStatusContext"], "status context contract");
 includesAll(playbooks, ["executive_brief", "risk_blocker", "outcome_proof", "customer_revenue", "quality_release"], "market playbook ids");
 includesAll(playbooks, ["sourceProducts", "marketSignals", "preflightSignals", "generationRules", "scoreEmphasis"], "market playbook research contract");
 includesAll(recommender, ["recommendMarketPlaybook", "roleScores", "keywordSignals", "alternatives"], "playbook recommendation contract");
@@ -87,15 +90,17 @@ includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "lis
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
 includesAll(extractor, requiredRoles, "input extractor role coverage");
 includesAll(page, ["extractFieldsFromPaste", "/api/inputs/extract", "WandSparkles"], "input extraction UI contract");
-includesAll(preflight, ["analyzeWorkInput", "getMarketPlaybook", "buildPlaybookChecks", "playbook_", "数据支撑", "风险问题", "下一步", "领导支持"], "input preflight contract");
-includesAll(page, ["runInputPreflight", "/api/inputs/preflight", "preflight"], "input preflight UI contract");
+includesAll(preflight, ["analyzeWorkInput", "getMarketPlaybook", "buildPlaybookChecks", "status_health", "goal_alignment", "playbook_", "数据支撑", "风险问题", "下一步", "领导支持"], "input preflight contract");
+includesAll(page, ["runInputPreflight", "/api/inputs/preflight", "preflight", "statusHealth", "goalStatement", "decisionRequest"], "input preflight UI contract");
 includesAll(formatter, ["markdown", "im", "email", "formatReportOutput"], "report formatter contract");
 includesAll(page, ["outputFormat", "/api/reports/format", "IM 简洁版", "邮件版"], "report format UI contract");
 includesAll(providers, ["testProviderConnection", "Provider connection succeeded", "Bearer [redacted]"], "provider diagnostic contract");
 includesAll(page, ["testCurrentProvider", "/api/providers/test", "PlugZap"], "provider diagnostic UI contract");
 includesAll(page, ["marketPlaybooks", "selectedPlaybookId", "汇报打法", "Compass"], "market playbook UI contract");
 includesAll(page, ["recommendPlaybook", "/api/playbooks/recommend", "智能推荐", "应用推荐"], "playbook recommendation UI contract");
+includesAll(prompts, ["状态/目标上下文", "formatStatusContext", "不要自行编造健康度"], "status context prompt contract");
 includesAll(reportService, ["getMarketPlaybook", "playbook.summary", "playbook.fallbackSections"], "market playbook generation contract");
+includesAll(reportService, ["getReportHealthOption", "整体状态", "目标对齐", "决策/支持诉求"], "status context generation contract");
 includesAll(db, ["sanitizeExport", "API_KEY", "Bearer [redacted]"], "export privacy contract");
 includesAll(reportService, ["本地体验稿", "暂无量化数据", "buildLocalExperienceReport"], "no-key and no-fabrication fallback");
 
@@ -123,6 +128,7 @@ console.log(JSON.stringify({
     "feedback UI",
     "input extraction",
     "input preflight",
+    "status context",
     "copy formatting",
     "provider diagnostic",
     "market playbooks",
