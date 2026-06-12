@@ -16,6 +16,7 @@
 - 复制格式：同一份报告可按 Markdown、IM 简洁版、邮件版预览和复制。
 - 模型诊断：可在生成前测试当前 AI 供应商、模型名和 API Key 是否可用。
 - 市场打法：可选择高层快读、风险预警、成果证明、客户/收入推进、质量/发布判断五种结构。
+- 智能推荐：根据岗位、报告类型和输入内容推荐最适合的汇报打法，并给出原因和备选。
 
 ## 本地启动
 
@@ -82,6 +83,7 @@ pnpm verify:product
 - `/api/inputs/preflight` checks whether the input is ready for a high-quality report.
 - `/api/providers/test` can diagnose missing API keys or test configured model connectivity.
 - Market playbooks let the user choose executive brief, risk warning, outcome proof, customer/revenue, or quality/release structure.
+- `/api/playbooks/recommend` can recommend the best playbook from role, report type, and input signals.
 - `/api/reports/format` can prepare Markdown, IM, and email-ready output.
 - `/api/feedback` saves a user-fit feedback record.
 - `/api/export` includes reports and feedback without credential-like text.
@@ -98,6 +100,7 @@ For custom test environments, set `WORK_SUMMARY_DB_PATH` to point the app at an 
 - Paste-to-fields extraction remains wired into API and UI.
 - Input preflight remains wired into API and UI.
 - Provider diagnostics remain wired into API and UI.
+- Playbook recommendation remains wired into API and UI.
 - Markdown, IM, and email-ready copy formats remain wired into API and UI.
 - Product, launch, and user-fit docs still describe the promised capabilities.
 

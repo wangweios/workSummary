@@ -26,6 +26,7 @@ const preflight = read("src/lib/input-preflight.ts");
 const formatter = read("src/lib/report-formatter.ts");
 const providers = read("src/lib/ai/providers.ts");
 const playbooks = read("src/lib/market-playbooks.ts");
+const recommender = read("src/lib/playbook-recommender.ts");
 const reportService = read("src/lib/report-service.ts");
 const page = read("src/app/page.tsx");
 const packageJson = JSON.parse(read("package.json"));
@@ -81,6 +82,7 @@ for (const roleId of requiredRoles) {
 includesAll(types, ["UserFeedbackInput", "UserFeedback", "ReportType", "ScoreDimensionId", "playbookId"], "public product types");
 includesAll(playbooks, ["executive_brief", "risk_blocker", "outcome_proof", "customer_revenue", "quality_release"], "market playbook ids");
 includesAll(playbooks, ["sourceProducts", "marketSignals", "generationRules", "scoreEmphasis"], "market playbook research contract");
+includesAll(recommender, ["recommendMarketPlaybook", "roleScores", "keywordSignals", "alternatives"], "playbook recommendation contract");
 includesAll(db, ["WORK_SUMMARY_DB_PATH", "user_feedback", "createFeedback", "listFeedback"], "feedback storage contract");
 includesAll(page, ["submitFeedback", "/api/feedback", "feedbackDraft"], "feedback UI contract");
 includesAll(extractor, requiredRoles, "input extractor role coverage");
@@ -92,6 +94,7 @@ includesAll(page, ["outputFormat", "/api/reports/format", "IM 简洁版", "邮�
 includesAll(providers, ["testProviderConnection", "Provider connection succeeded", "Bearer [redacted]"], "provider diagnostic contract");
 includesAll(page, ["testCurrentProvider", "/api/providers/test", "PlugZap"], "provider diagnostic UI contract");
 includesAll(page, ["marketPlaybooks", "selectedPlaybookId", "汇报打法", "Compass"], "market playbook UI contract");
+includesAll(page, ["recommendPlaybook", "/api/playbooks/recommend", "智能推荐", "应用推荐"], "playbook recommendation UI contract");
 includesAll(reportService, ["getMarketPlaybook", "playbook.summary", "playbook.fallbackSections"], "market playbook generation contract");
 includesAll(db, ["sanitizeExport", "API_KEY", "Bearer [redacted]"], "export privacy contract");
 includesAll(reportService, ["本地体验稿", "暂无量化数据", "buildLocalExperienceReport"], "no-key and no-fabrication fallback");
@@ -123,6 +126,7 @@ console.log(JSON.stringify({
     "copy formatting",
     "provider diagnostic",
     "market playbooks",
+    "playbook recommendation",
     "export privacy",
     "no-key fallback",
     "launch docs"

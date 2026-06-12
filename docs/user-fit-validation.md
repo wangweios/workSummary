@@ -15,6 +15,7 @@
 | 输入材料太少导致报告空泛 | 生成前输入体检提示数据、风险、下一步等缺口 | `/api/inputs/preflight` 和页面“输入体检”按钮 |
 | 配好模型后不知道能不能用 | 生成前可测试供应商、模型名和 API Key | `/api/providers/test` 和页面“测试模型”按钮 |
 | 不知道该用哪种汇报结构 | 提供来自同类产品提炼的汇报打法 | 页面“汇报打法”和 `src/lib/market-playbooks.ts` |
+| 选打法仍然有判断成本 | 根据岗位、周期和输入信号推荐打法 | `/api/playbooks/recommend` 和页面“智能推荐”按钮 |
 | 不同渠道复制格式不同 | 输出区支持 Markdown、IM 简洁版、邮件版 | `/api/reports/format` 和复制格式选择 |
 
 ## 上线验证结果

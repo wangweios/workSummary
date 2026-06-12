@@ -64,6 +64,19 @@ type PreflightResult = {
   }>;
 };
 
+type PlaybookRecommendation = {
+  playbookId: string;
+  playbookName: string;
+  confidence: number;
+  reasons: string[];
+  signals: string[];
+  alternatives: Array<{
+    playbookId: string;
+    playbookName: string;
+    score: number;
+  }>;
+};
+
 const reportTypes: Array<{ id: ReportType; label: string }> = [
   { id: "daily", label: "日报" },
   { id: "weekly", label: "周报" },
@@ -133,6 +146,8 @@ export default function HomePage() {
   const [preflight, setPreflight] = useState<PreflightResult | null>(null);
   const [optimizing, setOptimizing] = useState(false);
   const [testingProvider, setTestingProvider] = useState(false);
+  const [recommendingPlaybook, setRecommendingPlaybook] = useState(false);
+  const [playbookRecommendation, setPlaybookRecommendation] = useState<PlaybookRecommendation | null>(null);
   const [savingPersona, setSavingPersona] = useState(false);
   const [savingRole, setSavingRole] = useState(false);
   const [sendingFeedback, setSendingFeedback] = useState(false);
@@ -253,6 +268,10 @@ export default function HomePage() {
     setHistoryFrom(monthStart());
     setHistoryTo(today());
   }, [reportType]);
+
+  useEffect(() => {
+    setPlaybookRecommendation(null);
+  }, [selectedPresetId, reportType]);
 
   async function bootstrap() {
     setError("");
@@ -424,6 +443,45 @@ export default function HomePage() {
     } finally {
       setCheckingInput(false);
     }
+  }
+
+  async function recommendPlaybook() {
+    setError("");
+    setNotice("");
+    setRecommendingPlaybook(true);
+    try {
+      const response = await fetch("/api/playbooks/recommend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rolePresetId: selectedPresetId,
+          reportType,
+          workInput: {
+            reportType,
+            periodStart,
+            periodEnd,
+            fields: labeledFields(),
+            extraText,
+            historyFrom,
+            historyTo
+          }
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "推荐汇报打法失败。");
+      setPlaybookRecommendation(data.recommendation);
+      setNotice(`推荐使用“${data.recommendation.playbookName}”，置信度 ${data.recommendation.confidence}%。`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "推荐汇报打法失败。");
+    } finally {
+      setRecommendingPlaybook(false);
+    }
+  }
+
+  function applyRecommendedPlaybook() {
+    if (!playbookRecommendation) return;
+    setSelectedPlaybookId(playbookRecommendation.playbookId);
+    setNotice(`已应用推荐打法：${playbookRecommendation.playbookName}。`);
   }
 
   async function handleOptimize() {
@@ -844,6 +902,36 @@ export default function HomePage() {
               ))}
             </div>
           </div>
+          <div className="playbook-actions">
+            <button type="button" className="secondary-action" onClick={recommendPlaybook} disabled={recommendingPlaybook}>
+              <Sparkles size={16} aria-hidden />
+              {recommendingPlaybook ? "推荐中" : "智能推荐"}
+            </button>
+            {playbookRecommendation && playbookRecommendation.playbookId !== selectedPlaybookId ? (
+              <button type="button" className="secondary-action" onClick={applyRecommendedPlaybook}>
+                <Check size={16} aria-hidden />
+                应用推荐
+              </button>
+            ) : null}
+          </div>
+          {playbookRecommendation ? (
+            <div className="recommendation-box">
+              <div className="recommendation-head">
+                <strong>{playbookRecommendation.playbookName}</strong>
+                <span>{playbookRecommendation.confidence}%</span>
+              </div>
+              <ul>
+                {playbookRecommendation.reasons.map((reason) => (
+                  <li key={reason}>{reason}</li>
+                ))}
+              </ul>
+              {playbookRecommendation.alternatives.length ? (
+                <small>
+                  备选：{playbookRecommendation.alternatives.map((item) => item.playbookName).join("、")}
+                </small>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <section className="panel input-panel">

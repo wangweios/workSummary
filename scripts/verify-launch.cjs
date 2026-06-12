@@ -94,6 +94,25 @@ async function main() {
     } else {
       if (!providerTest.providerId) throw new Error("Provider diagnostic missing provider id");
     }
+    const playbookRecommendation = await request("POST", "/api/playbooks/recommend", {
+      rolePresetId: "sales",
+      reportType: "daily",
+      workInput: {
+        reportType: "daily",
+        fields: {
+          "拜访/沟通": "Visited two renewal customers and confirmed decision process.",
+          "成交/金额": "Estimated pipeline 120k pending legal review.",
+          "回款风险": "One customer payment approval may slip by one week."
+        },
+        extraText: "Customer feedback mentions competitor pricing and contract approval risk."
+      }
+    });
+    if (playbookRecommendation.recommendation?.playbookId !== "customer_revenue") {
+      throw new Error("Playbook recommendation should choose customer/revenue for sales customer signals");
+    }
+    if (!playbookRecommendation.recommendation?.reasons?.length) {
+      throw new Error("Playbook recommendation should include reasons");
+    }
 
     const bosses = await request("GET", "/api/bosses");
     const bossId = bosses.bosses[0].id;

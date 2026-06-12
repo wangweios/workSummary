@@ -9,7 +9,7 @@
 | 老板人设 | 已完成 | 默认人设 + 可编辑标签权重 |
 | AI provider | 已完成 | OpenAI、DeepSeek、通义千问 OpenAI-compatible 适配 |
 | 本地数据持久化 | 已完成 | SQLite `data/work-summary.sqlite` |
-| 报告生成/评分/优化 | 已完成 | `/api/reports/generate`、`/score`、`/optimize`，支持市场打法参数 |
+| 报告生成/评分/优化 | 已完成 | `/api/reports/generate`、`/score`、`/optimize`，支持市场打法参数和打法推荐 |
 | 无 Key 首次体验 | 已完成 | 缺 API Key 时生成本地体验稿 |
 | 数据导出 | 已完成 | `/api/export` |
 | 数据清空 | 已完成 | `/api/settings/reset` |
@@ -46,10 +46,10 @@
 
 Added an automated launch verification command: `pnpm verify:launch`.
 
-The verification uses a temporary SQLite database through `WORK_SUMMARY_DB_PATH`, so release checks do not pollute real local user data. It covers health check, provider diagnostics, paste-to-fields extraction, input preflight, local no-key generation, scoring, report formatting, feedback capture, export privacy, and reset.
+The verification uses a temporary SQLite database through `WORK_SUMMARY_DB_PATH`, so release checks do not pollute real local user data. It covers health check, provider diagnostics, playbook recommendation, paste-to-fields extraction, input preflight, local no-key generation, scoring, report formatting, feedback capture, export privacy, and reset.
 
 Added `/api/feedback` as the first product feedback loop. This gives the team a concrete place to capture whether the product is solving the user's actual reporting pain instead of only relying on assumptions.
 
 Added product contract verification: `pnpm verify:product`.
 
-This check protects the non-negotiable product promises: 5 role presets, 7 scoring dimensions, 8 boss persona tags, daily/weekly/monthly guidance, market playbooks, feedback storage/UI, paste-to-fields extraction, input preflight, provider diagnostics, copy formatting, export privacy, no-key fallback, and launch/user-fit documentation.
+This check protects the non-negotiable product promises: 5 role presets, 7 scoring dimensions, 8 boss persona tags, daily/weekly/monthly guidance, market playbooks and recommendation, feedback storage/UI, paste-to-fields extraction, input preflight, provider diagnostics, copy formatting, export privacy, no-key fallback, and launch/user-fit documentation.

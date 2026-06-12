@@ -349,6 +349,53 @@ textarea:focus {
   line-height: 1.2;
 }
 
+.playbook-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.recommendation-box {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #cfe0d2;
+  background: #f7fbf7;
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.recommendation-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.recommendation-head strong {
+  font-size: 14px;
+}
+
+.recommendation-head span {
+  color: var(--teal);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+.recommendation-box ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.recommendation-box small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
 .stacked-fields {
   display: grid;
   gap: 10px;
@@ -799,6 +846,10 @@ meter {
 
   .playbook-options {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .playbook-actions {
+    grid-template-columns: 1fr;
   }
 
   .output-tabs {
